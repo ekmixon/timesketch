@@ -48,11 +48,11 @@ class DomainSketchPlugin(interface.BaseAnalyzer):
             domain = event.source.get('domain')
 
             if not domain:
-                url = event.source.get('url')
-                if not url:
-                    continue
-                domain = utils.get_domain_from_url(url)
+                if url := event.source.get('url'):
+                    domain = utils.get_domain_from_url(url)
 
+                else:
+                    continue
             if not domain:
                 continue
 
@@ -80,8 +80,7 @@ class DomainSketchPlugin(interface.BaseAnalyzer):
                 domain_count_array, 85))
         except IndexError:
             logger.warning('Unable to calculate the 85th percentile.')
-            highest_count_domain = domain_counter.most_common(1)
-            if highest_count_domain:
+            if highest_count_domain := domain_counter.most_common(1):
                 _, highest_count = highest_count_domain[0]
                 domain_85th_percentile = highest_count + 10
             else:

@@ -9,10 +9,7 @@ from timesketch.lib.testlib import MockDataStore
 
 class MockEvent(object):
     def __init__(self, source=None):
-        if source:
-            self.source = source
-        else:
-            self.source = {}
+        self.source = source or {}
         self.label = ""
 
     def add_attributes(self, attributes):

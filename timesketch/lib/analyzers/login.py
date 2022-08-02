@@ -34,13 +34,14 @@ def parse_evtx_logoff_event(string_list):
     Returns:
         Dict with attributes parsed out of the logoff events.
     """
-    if not len(string_list) == 5:
+    if len(string_list) != 5:
         return {}
 
-    attributes = {}
-    attributes['username'] = string_list[1]
-    attributes['logon_domain'] = string_list[2]
-    attributes['session_id'] = string_list[3]
+    attributes = {
+        'username': string_list[1],
+        'logon_domain': string_list[2],
+        'session_id': string_list[3],
+    }
 
     logon_type_code = string_list[4]
     attributes['logon_type'] = LOGON_TYPES.get(
@@ -69,25 +70,21 @@ def parse_evtx_logon_event(string_list, string_parsed):
         string_parsed['hostname'] = string_list[11]
         string_parsed['source_user_name'] = string_list[1]
 
-    attributes = {}
     logon_type_code = string_list[8]
-    attributes['logon_type'] = LOGON_TYPES.get(
-        logon_type_code, LOGON_TYPES.get('0'))
+    attributes = {
+        'logon_type': LOGON_TYPES.get(logon_type_code, LOGON_TYPES.get('0'))
+    }
 
-    win_domain = string_list[2]
-    if win_domain:
+    if win_domain := string_list[2]:
         attributes['windows_domain'] = win_domain
 
-    username = string_parsed.get('target_user_name')
-    if username:
+    if username := string_parsed.get('target_user_name'):
         attributes['username'] = username
 
-    user_id = string_parsed.get('target_user_id')
-    if user_id:
+    if user_id := string_parsed.get('target_user_id'):
         attributes['user_id'] = user_id
 
-    logon_process_name = string_list[9]
-    if logon_process_name:
+    if logon_process_name := string_list[9]:
         attributes['logon_process'] = logon_process_name
 
     workstation_name = string_list[11]
@@ -100,16 +97,13 @@ def parse_evtx_logon_event(string_list, string_parsed):
     if ip_address and ip_address != '-':
         attributes['source_address'] = ip_address
 
-    hostname = string_parsed.get('target_machine_name', 'N/A')
-    if hostname:
+    if hostname := string_parsed.get('target_machine_name', 'N/A'):
         attributes['hostname'] = hostname
 
-    session_id = string_list[3]
-    if session_id:
+    if session_id := string_list[3]:
         attributes['session_id'] = session_id
 
-    source_username = string_parsed.get('source_user_name')
-    if source_username:
+    if source_username := string_parsed.get('source_user_name'):
         attributes['source_username'] = source_username
 
     return attributes

@@ -61,8 +61,7 @@ class TaskResource(resources.ResourceMixin, Resource):
 
         schema = {'objects': [], 'meta': {}}
 
-        job_id = request.args.get('job_id', '')
-        if job_id:
+        if job_id := request.args.get('job_id', ''):
             task = self._get_celery_information(job_id)
             schema['objects'].append(task)
             return jsonify(schema)

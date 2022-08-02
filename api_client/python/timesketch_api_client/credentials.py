@@ -98,9 +98,9 @@ class TimesketchPwdCredentials(TimesketchCredentials):
         except ValueError as exc:
             raise TypeError('Unable to parse the byte string.') from exc
 
-        if not 'username' in data_dict:
+        if 'username' not in data_dict:
             raise TypeError('Username is not set.')
-        if not 'password' in data_dict:
+        if 'password' not in data_dict:
             raise TypeError('Password is not set.')
         self._credential = data_dict
 

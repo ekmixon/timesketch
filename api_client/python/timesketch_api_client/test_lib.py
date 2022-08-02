@@ -177,11 +177,6 @@ def mock_response(*args, **kwargs):
         }]
     }
 
-    empty_data = {
-        'meta': {'es_time': 0},
-        'objects': []
-    }
-
     story_list_data = {
         'meta': {'es_time': 23},
         'objects': [[{'id': 1}]]
@@ -367,6 +362,11 @@ def mock_response(*args, **kwargs):
     }
 
     if kwargs.get('empty', False):
+        empty_data = {
+            'meta': {'es_time': 0},
+            'objects': []
+        }
+
         return MockResponse(text_data=empty_data)
 
     return url_router.get(args[0], MockResponse(None, 404))

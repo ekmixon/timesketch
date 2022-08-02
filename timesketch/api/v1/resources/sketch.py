@@ -99,8 +99,6 @@ class SketchListResource(resources.ResourceMixin, Resource):
 
         filtered_sketches = base_filter_with_archived
         sketches = []
-        return_sketches = []
-
         has_next = False
         has_prev = False
         next_page = None
@@ -152,18 +150,18 @@ class SketchListResource(resources.ResourceMixin, Resource):
             total_pages = pagination.pages
             total_items = pagination.total
 
-        for sketch in sketches:
-            # Return a subset of the sketch objects to reduce the amount of
-            # data sent to the client.
-            return_sketches.append({
+        return_sketches = [
+            {
                 'id': sketch.id,
                 'name': sketch.name,
                 'description': sketch.description,
                 'created_at': str(sketch.created_at),
                 'last_activity': utils.get_sketch_last_activity(sketch),
                 'user': sketch.user.username,
-                'status': sketch.get_status.status
-            })
+                'status': sketch.get_status.status,
+            }
+            for sketch in sketches
+        ]
 
         meta = {
             'current_user': current_user.username,
@@ -247,11 +245,7 @@ class SketchResource(resources.ResourceMixin, Resource):
             A limited view of a sketch in JSON (instance of
             flask.wrappers.Response)
         """
-        if sketch.get_status.status == 'archived':
-            status = 'archived'
-        else:
-            status = 'admin_view'
-
+        status = 'archived' if sketch.get_status.status == 'archived' else 'admin_view'
         sketch_fields = {
             'id': sketch.id,
             'name': sketch.name,

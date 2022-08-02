@@ -168,11 +168,15 @@ class BaseEndToEndTest(object):
             timeline_name (str): the name of the imported timeline.
             analyzer_name (str): the name of the analyzer to run.
         """
-        timeline = None
-        for time_obj in self.sketch.list_timelines():
-            if time_obj.name == timeline_name:
-                timeline = time_obj
-                break
+        timeline = next(
+            (
+                time_obj
+                for time_obj in self.sketch.list_timelines()
+                if time_obj.name == timeline_name
+            ),
+            None,
+        )
+
         if not timeline:
             print(
                 f'Unable to run analyzer: {analyzer_name} on {timeline_name}, '
@@ -191,10 +195,7 @@ class BaseEndToEndTest(object):
             if retry_count >= max_retries:
                 raise TimeoutError('Unable to wait for analyzer run to end.')
 
-            status_set = set()
-            for line in results.status.split('\n'):
-                status_set.add(line.split()[-1])
-
+            status_set = {line.split()[-1] for line in results.status.split('\n')}
             if status_set.issubset(self._ANALYZERS_COMPLETE_SET):
                 break
 

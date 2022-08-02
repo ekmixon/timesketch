@@ -126,9 +126,7 @@ class AggregationResult(object):
         if as_html:
             return chart.to_html()
 
-        if as_chart:
-            return chart
-        return chart.to_dict()
+        return chart if as_chart else chart.to_dict()
 
 
 class BaseAggregator(object):

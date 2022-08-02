@@ -217,11 +217,7 @@ class FilteredTermsAggregation(interface.BaseAggregator):
             }
             values.append(d)
 
-        if query_string:
-            extra_query_url = 'AND {0:s}'.format(query_string)
-        else:
-            extra_query_url = ''
-
+        extra_query_url = 'AND {0:s}'.format(query_string) if query_string else ''
         return interface.AggregationResult(
             encoding=encoding, values=values, chart_type=supported_charts,
             sketch_url=self._sketch_url, field=field,

@@ -225,10 +225,11 @@ if __name__ == '__main__':
             options.rules_path))
         sys.exit(1)
 
-    if len(options.blocklist_file_path) > 0:
-        if not os.path.isfile(options.blocklist_file_path):
-            print('Blocklist file not found.')
-            sys.exit(1)
+    if len(options.blocklist_file_path) > 0 and not os.path.isfile(
+        options.blocklist_file_path
+    ):
+        print('Blocklist file not found.')
+        sys.exit(1)
 
     sigma_verified_rules, sigma_rules_with_problems = run_verifier(
         rules_path=options.rules_path,

@@ -223,7 +223,7 @@ class TestManyEventsSequenceSessionizerPlugin(BaseTest):
             # Events that are not part of the sequence but are between
             # significant events from the event sequence considered as a session
             # are part of the significant events' session.
-            for i in range(0, 101):
+            for i in range(101):
                 event = datastore.event_store[str(i)]
                 self.assertEqual(
                     event['_source']['session_id'][sessionizer.session_type],
@@ -253,7 +253,7 @@ class TestManyEventsSequenceSessionizerPlugin(BaseTest):
                 'Sessionizing completed, number of {0:s} sessions created: 2'.
                 format(sessionizer.session_type))
 
-            for i in range(0, 100):
+            for i in range(100):
                 event = datastore.event_store[str(i)]
                 self.assertEqual(
                     event['_source']['session_id'][sessionizer.session_type],
@@ -322,7 +322,7 @@ class TestManyEventsSequenceSessionizerPlugin(BaseTest):
                 'Sessionizing completed, number of {0:s} sessions created: 1'.
                 format(sessionizer.session_type))
 
-            for i in range(0, 101):
+            for i in range(101):
                 event = datastore.event_store[str(i)]
                 self.assertEqual(
                     event['_source']['session_id'][sessionizer.session_type],
@@ -356,7 +356,7 @@ class TestManyEventsSequenceSessionizerPlugin(BaseTest):
             # Events with id 0 and id 101 form the requested sequence, but
             # event with id 100 and 101 have max_time_diff_micros + 1 bewtween
             # them
-            for i in range(0, 201):
+            for i in range(201):
                 event = datastore.event_store[str(i)]
                 self.assertNotIn('session_id', event['_source'])
 

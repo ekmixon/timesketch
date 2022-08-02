@@ -47,7 +47,7 @@ def format_data_frame(dataframe, format_message_string):
 
     formatter = string.Formatter()
     for literal_text, field, _, _ in formatter.parse(format_message_string):
-        dataframe['message'] = dataframe['message'] + literal_text
+        dataframe['message'] += literal_text
 
         if field:
             dataframe['message'] = dataframe[
@@ -72,11 +72,7 @@ def get_combined_message_string(dataframe=None, mydict=None):
     if dataframe is None and mydict is None:
         raise ValueError('Need to define either a dict or a DataFrame')
 
-    if mydict:
-        my_list = list(mydict.keys())
-    else:
-        my_list = list(dataframe.columns)
-
+    my_list = list(mydict.keys()) if mydict else list(dataframe.columns)
     fields_to_delete = list(set(my_list).intersection(
         FIELDS_TO_SKIP_IN_FORMAT_STRING))
     for field in fields_to_delete:

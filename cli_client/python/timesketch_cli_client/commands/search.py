@@ -101,7 +101,6 @@ def describe_query(search_obj):
     '--describe', is_flag=True, default=False,
     help='Show the query and filter then exit')
 @click.pass_context
-# pylint: disable=too-many-arguments
 def search_group(ctx, query, times, time_ranges, labels, header, output,
                  return_fields, order, limit, saved_search, describe):
     """Search and explore."""
@@ -112,10 +111,7 @@ def search_group(ctx, query, times, time_ranges, labels, header, output,
     if output:
         output_format = output
 
-    new_line = True
-    if output_format == 'csv':
-        new_line = False
-
+    new_line = output_format != 'csv'
     # Construct query from saved search and return early.
     if saved_search:
         search_obj.from_saved(saved_search)

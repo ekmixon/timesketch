@@ -110,10 +110,7 @@ class VegaResult:
         if as_html:
             return chart.to_html()
 
-        if as_chart:
-            return chart
-
-        return self._spec
+        return chart if as_chart else self._spec
 
 
 class ManualVegaSpecAggregation(interface.BaseAggregator):
@@ -144,9 +141,7 @@ class ManualVegaSpecAggregation(interface.BaseAggregator):
     @property
     def chart_title(self):
         """Returns a title for the chart."""
-        if self.title:
-            return self.title
-        return 'Results From A Manual Vega Spec'
+        return self.title or 'Results From A Manual Vega Spec'
 
     # pylint: disable=arguments-differ
     def run(self, data, title='', **kwargs):

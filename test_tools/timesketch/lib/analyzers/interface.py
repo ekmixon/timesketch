@@ -66,10 +66,7 @@ def get_config_path(file_name):
     path = os.path.join(
         os.path.dirname(__file__), '..', '..', '..', '..', 'data', file_name)
     path = os.path.abspath(path)
-    if os.path.isfile(path):
-        return path
-
-    return ''
+    return path if os.path.isfile(path) else ''
 
 
 class AnalyzerContext(object):
@@ -87,37 +84,37 @@ class AnalyzerContext(object):
 
     def get_string_report(self):
         """Returns a string describing the changes made by the analyzer."""
-        return_strings = ['-'*80]
-        return_strings.append(
-            '{0:^80s}'.format(self.analyzer_name))
-        return_strings.append('-'*80)
-        return_strings.append('Total number of events: {0:d}'.format(
-            len(self.event_cache)))
-        return_strings.append('Total number of queries: {0:d}'.format(
-            len(self.queries)))
+        return_strings = [
+            '-' * 80,
+            '{0:^80s}'.format(self.analyzer_name),
+            '-' * 80,
+            'Total number of events: {0:d}'.format(len(self.event_cache)),
+            'Total number of queries: {0:d}'.format(len(self.queries)),
+            '',
+            '+' * 80,
+        ]
 
-        return_strings.append('')
-        return_strings.append('+'*80)
         for qid, query in enumerate(self.queries):
             return_strings.append('  -- Query #{0:02d} --'.format(qid+1))
-            for key, value in query.items():
-                return_strings.append('{0:>20s}: {1!s}'.format(key, value))
+            return_strings.extend(
+                '{0:>20s}: {1!s}'.format(key, value)
+                for key, value in query.items()
+            )
 
         if self.failed:
             return '\n'.join(return_strings)
 
         if self.sketch and self.sketch.updates:
-            return_strings.append('')
-            return_strings.append('+'*80)
-            return_strings.append('Sketch updates:')
+            return_strings.extend(('', '+'*80, 'Sketch updates:'))
             for update in self.sketch.updates:
-                return_strings.append('  {0:s} {1:s}'.format(
-                    update.type, update.source))
-                return_strings.append('\t{0!s}'.format(update.what))
+                return_strings.extend(
+                    (
+                        '  {0:s} {1:s}'.format(update.type, update.source),
+                        '\t{0!s}'.format(update.what),
+                    )
+                )
 
-        return_strings.append('')
-        return_strings.append('+'*80)
-        return_strings.append('Event Updates:')
+        return_strings.extend(('', '+'*80, 'Event Updates:'))
         event_container = {}
         for event in self.event_cache.values():
             if not event.updates:
@@ -129,13 +126,20 @@ class AnalyzerContext(object):
 
         for key, counter in event_container.items():
             return_strings.append('  {0:s}'.format(key))
-            for value, count in counter.most_common():
-                return_strings.append('\t[{0:d}] {1:s}\n'.format(count, value))
-        return_strings.append('')
-        return_strings.append('+'*80)
-        return_strings.append('Result from analyzer run:')
-        return_strings.append('  {0:s}'.format(self.analyzer_result))
-        return_strings.append('=-'*40)
+            return_strings.extend(
+                '\t[{0:d}] {1:s}\n'.format(count, value)
+                for value, count in counter.most_common()
+            )
+
+        return_strings.extend(
+            (
+                '',
+                '+' * 80,
+                'Result from analyzer run:',
+                '  {0:s}'.format(self.analyzer_result),
+                '=-' * 40,
+            )
+        )
 
         if self.error:
             return_strings.append('Error occurred:\n{0:s}'.format(self.error))
@@ -261,11 +265,7 @@ class Event(object):
             event_dict: (optional) Dictionary with updated event attributes.
             Defaults to self.updated_event.
         """
-        if event_dict:
-            event_to_commit = event_dict
-        else:
-            event_to_commit = self.updated_event
-
+        event_to_commit = event_dict or self.updated_event
         if not event_to_commit:
             return
 
@@ -294,10 +294,7 @@ class Event(object):
         if not self.sketch:
             raise RuntimeError('No sketch provided.')
 
-        if toggle:
-            event_type = 'UPDATE'
-        else:
-            event_type = 'ADD'
+        event_type = 'UPDATE' if toggle else 'ADD'
         change = EVENT_CHANGE(event_type, 'label', label)
         self._update_change(change)
 
@@ -359,11 +356,7 @@ class Event(object):
         """
         human_readable = '[{0:s}] {1:s}'.format(analyzer_name, human_readable)
 
-        if append:
-            event_type = 'ADD'
-        else:
-            event_type = 'PREPEND'
-
+        event_type = 'ADD' if append else 'PREPEND'
         change = EVENT_CHANGE(event_type, 'human_readable', human_readable)
         self._update_change(change)
 
@@ -418,8 +411,7 @@ class Sketch(object):
         change = SKETCH_CHANGE('ADD', 'aggregation', params)
         self.updates.append(change)
 
-        agg_obj = AGG_OBJECT(1, name, agg_params)
-        return agg_obj
+        return AGG_OBJECT(1, name, agg_params)
 
     def add_aggregation_group(self, name, description='', view_id=None):
         """Add aggregation Group to the sketch.
@@ -483,8 +475,7 @@ class Sketch(object):
         change = SKETCH_CHANGE('ADD', 'view', params)
         self.updates.append(change)
 
-        view = VIEW_OBJECT(1, name)
-        return view
+        return VIEW_OBJECT(1, name)
 
     def add_sketch_attribute(self, name, values, ontology='text'):
         """Add an attribute to the sketch.
@@ -522,8 +513,7 @@ class Sketch(object):
         change = SKETCH_CHANGE('ADD', 'story', params)
         self.updates.append(change)
 
-        story = Story(self, title=title)
-        return story
+        return Story(self, title=title)
 
     def get_all_indices(self):
         """List all indices in the Sketch.

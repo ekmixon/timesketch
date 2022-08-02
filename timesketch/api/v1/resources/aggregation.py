@@ -90,7 +90,6 @@ class AggregationResource(resources.ResourceMixin, Resource):
         return self.to_json(aggregation)
 
     @login_required
-    # pylint: disable=unused-argument
     def post(self, sketch_id, aggregation_id):
         """Handles POST request to the resource.
 
@@ -135,8 +134,7 @@ class AggregationResource(resources.ResourceMixin, Resource):
         aggregation.user = current_user
         aggregation.sketch = sketch
 
-        labels = form.get('labels', '')
-        if labels:
+        if labels := form.get('labels', ''):
             for label in json.loads(labels):
                 if aggregation.has_label(label):
                     continue
@@ -233,9 +231,11 @@ class AggregationInfoResource(resources.ResourceMixin, Resource):
         Returns:
             JSON with information about every aggregator.
         """
-        agg_list = []
-        for name, _ in aggregator_manager.AggregatorManager.get_aggregators():
-            agg_list.append(self._get_info(name))
+        agg_list = [
+            self._get_info(name)
+            for name, _ in aggregator_manager.AggregatorManager.get_aggregators()
+        ]
+
         return jsonify(agg_list)
 
     @login_required
@@ -252,13 +252,15 @@ class AggregationInfoResource(resources.ResourceMixin, Resource):
             form = request.data
 
         aggregator_name = form.get('aggregator')
-        if not aggregator_name:
-            return abort(
+        return (
+            jsonify(self._get_info(aggregator_name))
+            if aggregator_name
+            else abort(
                 HTTP_STATUS_CODE_BAD_REQUEST,
                 'Not able to gather information about an aggregator, '
-                'missing the aggregator name.')
-
-        return jsonify(self._get_info(aggregator_name))
+                'missing the aggregator name.',
+            )
+        )
 
 
 class AggregationGroupResource(resources.ResourceMixin, Resource):
@@ -462,9 +464,7 @@ class AggregationExploreResource(resources.ResourceMixin, Resource):
         }
 
         aggregation_dsl = form.aggregation_dsl.data
-        aggregator_name = form.aggregator_name.data
-
-        if aggregator_name:
+        if aggregator_name := form.aggregator_name.data:
             if isinstance(form.aggregator_parameters.data, dict):
                 aggregator_parameters = form.aggregator_parameters.data
             else:
@@ -624,8 +624,7 @@ class AggregationListResource(resources.ResourceMixin, Resource):
             view=view_id
         )
 
-        labels = form.get('labels', '')
-        if labels:
+        if labels := form.get('labels', ''):
             for label in json.loads(labels):
                 if aggregation.has_label(label):
                     continue

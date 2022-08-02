@@ -83,7 +83,7 @@ class TestAnalyzerUtils(BaseTest):
         events = list(utils.get_events_from_data_frame(frame, None))
         self.assertEqual(len(events), 3)
         ids = [x.event_id for x in events]
-        self.assertEqual(set(ids), set(['123', '124', '125']))
+        self.assertEqual(set(ids), {'123', '124', '125'})
 
     def test_regular_expression_compile(self):
         """Test compiling regular expressions."""

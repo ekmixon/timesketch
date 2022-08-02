@@ -130,10 +130,7 @@ class SearchIndexResource(resources.ResourceMixin, Resource):
             searchindex.index_name, {}).get('mappings', {}).get(
                 'properties', {}).keys())
 
-        meta = {
-            'contains_timeline_id': bool('__ts_timeline_id' in fields),
-            'fields': fields,
-        }
+        meta = {'contains_timeline_id': '__ts_timeline_id' in fields, 'fields': fields}
         return self.to_json(searchindex, meta=meta)
 
     @login_required
@@ -176,8 +173,7 @@ class SearchIndexResource(resources.ResourceMixin, Resource):
             searchindex.set_status(status=new_status)
             commit_to_db = True
 
-        description = form.get('description', '')
-        if description:
+        if description := form.get('description', ''):
             searchindex.description = description
             commit_to_db = True
 
@@ -207,15 +203,13 @@ class SearchIndexResource(resources.ResourceMixin, Resource):
                 HTTP_STATUS_CODE_BAD_REQUEST, 'Search index already deleted.')
 
         timelines = Timeline.query.filter_by(searchindex=searchindex).all()
-        sketches = [
-            t.sketch for t in timelines
+        if sketches := [
+            t.sketch
+            for t in timelines
             if t.sketch and t.sketch.get_status.status != 'deleted'
-        ]
-
-        if sketches:
+        ]:
             error_strings = ['WARNING: This timeline is in use by:']
-            for sketch in sketches:
-                error_strings.append(' * {0:s}'.format(sketch.name))
+            error_strings.extend(' * {0:s}'.format(sketch.name) for sketch in sketches)
             abort(
                 HTTP_STATUS_CODE_FORBIDDEN,
                 '\n'.join(error_strings))

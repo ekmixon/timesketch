@@ -108,8 +108,7 @@ class ImportStreamer(object):
         if 'datetime' not in my_dict:
             date = ''
             if self._datetime_field:
-                value = my_dict.get(self._datetime_field)
-                if value:
+                if value := my_dict.get(self._datetime_field):
                     date = utils.get_datestring_from_value(value)
             if not date:
                 for key in my_dict:
@@ -131,9 +130,7 @@ class ImportStreamer(object):
             my_dict['datetime'] = utils.get_datestring_from_value(
                 my_dict['datetime'])
 
-        # We don't want to include any columns that start with an underscore.
-        underscore_columns = [x for x in my_dict if x.startswith('_')]
-        if underscore_columns:
+        if underscore_columns := [x for x in my_dict if x.startswith('_')]:
             for column in underscore_columns:
                 del my_dict[column]
 
@@ -390,7 +387,7 @@ class ImportStreamer(object):
             data['chunk_total_chunks'] = chunks
             data['chunk_index_name'] = uuid.uuid4().hex
 
-            for index in range(0, chunks):
+            for index in range(chunks):
                 data['chunk_index'] = index
                 start = self._threshold_filesize * index
                 data['chunk_byte_offset'] = start
@@ -495,11 +492,11 @@ class ImportStreamer(object):
             return
 
         chunks = int(math.ceil(float(size) / self._threshold_entry))
-        for index in range(0, chunks):
+        for index in range(chunks):
             chunk_start = index * self._threshold_entry
             data_chunk = data_frame_use[
                 chunk_start:chunk_start + self._threshold_entry]
-            end_stream = bool(index == chunks - 1)
+            end_stream = index == chunks - 1
             self._upload_data_frame(data_chunk, end_stream=end_stream)
 
     def add_dict(self, entry):
@@ -653,7 +650,7 @@ class ImportStreamer(object):
             if not column_names:
                 raise TypeError(
                     'Data is a list, but there are no defined column names.')
-            if not len(json_obj) != len(column_names):
+            if len(json_obj) == len(column_names):
                 raise TypeError(
                     'The number of columns ({0:d}) does not match the number '
                     'of columns in the JSON list ({1:d})'.format(
@@ -807,13 +804,13 @@ class ImportStreamer(object):
             logger.warning('No timeline ID has been stored as of yet.')
             return None
 
-        timeline_obj = timeline.Timeline(
+        return timeline.Timeline(
             timeline_id=self._timeline_id,
             sketch_id=self._sketch.id,
             api=self._sketch.api,
             name=self._timeline_name,
-            searchindex=self._index)
-        return timeline_obj
+            searchindex=self._index,
+        )
 
     def __enter__(self):
         """Make it possible to use "with" statement."""

@@ -67,7 +67,7 @@ def fix_gap_in_list(hour_list):
     runs = get_list_of_consecutive_sequences(hour_list)
     len_runs = len(runs)
 
-    for i in range(0, len_runs - 1):
+    for i in range(len_runs - 1):
         _, upper = runs[i]
         next_lower, _ = runs[i+1]
         if (upper + 1) == (next_lower - 1):
@@ -84,7 +84,7 @@ def fix_gap_in_list(hour_list):
     # Now we need to remove runs, we only need the first and last.
     run_start = runs[0]
     run_end = runs[-1]
-    hours = list(range(0, run_start[1] + 1))
+    hours = list(range(run_start[1] + 1))
     hours.extend(range(run_end[0], run_end[1] + 1))
 
     return sorted(hours)
@@ -281,7 +281,7 @@ class BrowserTimeframeSketchPlugin(interface.BaseAnalyzer):
                 label='informational')
             group.add_aggregation(agg_obj)
 
-            lines = [{'hour': x, 'count': threshold} for x in range(0, 24)]
+            lines = [{'hour': x, 'count': threshold} for x in range(24)]
             params = {
                 'data': lines,
                 'title': 'Browser Timeframe Threshold ({0:s})'.format(

@@ -62,11 +62,7 @@ def create_app(config=None):
         default_path = '/etc/timesketch/timesketch.conf'
         # Fall back to legacy location of the config file
         legacy_path = '/etc/timesketch.conf'
-        if os.path.isfile(default_path):
-            config = default_path
-        else:
-            config = legacy_path
-
+        config = default_path if os.path.isfile(default_path) else legacy_path
     if isinstance(config, six.text_type):
         os.environ['TIMESKETCH_SETTINGS'] = config
         try:
@@ -153,6 +149,8 @@ def create_app(config=None):
         return User.query.get(user_id)
 
     # Setup CSRF protection for the whole application
+
+    # Setup CSRF protection for the whole application
     CSRFProtect(app)
 
     return app
@@ -160,11 +158,14 @@ def create_app(config=None):
 
 def configure_logger():
     """Configure the logger."""
+
+
     class NoESFilter(logging.Filter):
         """Custom filter to filter out ES logs"""
         def filter(self, record):
             """Filter out records."""
-            return not record.name.lower() == 'elasticsearch'
+            return record.name.lower() != 'elasticsearch'
+
 
     logger_formatter = logging.Formatter(
         '[%(asctime)s] %(name)s/%(levelname)s %(message)s')

@@ -73,10 +73,9 @@ def _fetch_public_keys(url):
     try:
         resp = requests.get(url)
     except requests.exceptions.RequestException as e:
-        raise JwtKeyError('Cannot fetch public keys: {}'.format(e)) from e
+        raise JwtKeyError(f'Cannot fetch public keys: {e}') from e
     if resp.status_code != HTTP_STATUS_CODE_OK:
-        raise JwtKeyError(
-            'Cannot fetch public keys: {}'.format(resp.status_code))
+        raise JwtKeyError(f'Cannot fetch public keys: {resp.status_code}')
     return resp.json()
 
 
@@ -94,11 +93,12 @@ def _fetch_oauth2_discovery_document():
     try:
         resp = requests.get(discovery_url)
     except requests.exceptions.RequestException as e:
-        raise DiscoveryDocumentError(
-            'Cannot fetch discovery document: {}'.format(e)) from e
+        raise DiscoveryDocumentError(f'Cannot fetch discovery document: {e}') from e
     if resp.status_code != HTTP_STATUS_CODE_OK:
         raise DiscoveryDocumentError(
-            'Cannot fetch discovery_document: {}'.format(resp.status_code))
+            f'Cannot fetch discovery_document: {resp.status_code}'
+        )
+
     return resp.json()
 
 
@@ -147,8 +147,7 @@ def get_oauth2_authorize_url(hosted_domain=None):
         params['hd'] = hosted_domain
 
     urlencoded_params = urlparse.urlencode(params)
-    google_authorization_url = '{}?{}'.format(auth_uri, urlencoded_params)
-    return google_authorization_url
+    return f'{auth_uri}?{urlencoded_params}'
 
 
 def get_encoded_jwt_over_https(code):
@@ -182,11 +181,9 @@ def get_encoded_jwt_over_https(code):
         response = requests.post(token_url, data=post_data)
         encoded_jwt = response.json().get('id_token')
     except requests.exceptions.RequestException as e:
-        raise JwtFetchError(
-            'Cannot fetch JWT: {}'.format(e)) from e
+        raise JwtFetchError(f'Cannot fetch JWT: {e}') from e
     if response.status_code != HTTP_STATUS_CODE_OK:
-        raise JwtFetchError(
-            'Cannot fetch JWT: {}'.format(response.status_code))
+        raise JwtFetchError(f'Cannot fetch JWT: {response.status_code}')
 
     if not encoded_jwt:
         raise JwtFetchError('Cannot fetch JWT: Missing id_token in response')
@@ -214,14 +211,16 @@ def decode_jwt(encoded_jwt, public_key, algorithm, expected_audience):
     chosen_algorithm = current_app.config.get(
         'GOOGLE_OIDC_ALGORITHM', algorithm)
     try:
-        decoded_jwt = jwt.decode(
-            jwt=encoded_jwt, key=public_key,
+        return jwt.decode(
+            jwt=encoded_jwt,
+            key=public_key,
             algorithms=[chosen_algorithm],
-            audience=expected_audience)
-        return decoded_jwt
+            audience=expected_audience,
+        )
+
     except (jwt.exceptions.InvalidTokenError,
             jwt.exceptions.InvalidKeyError) as e:
-        raise JwtValidationError('JWT validation error: {}'.format(e)) from e
+        raise JwtValidationError(f'JWT validation error: {e}') from e
 
     return None
 
@@ -259,13 +258,13 @@ def validate_jwt(decoded_jwt, expected_issuer, expected_domain=None):
         if expires_at < now:
             raise JwtValidationError('Token has expired')
     except KeyError as e:
-        raise JwtValidationError('Missing timestamp: {}'.format(e)) from e
+        raise JwtValidationError(f'Missing timestamp: {e}') from e
 
     # Check that the issuer of the token is correct.
     try:
         issuer = decoded_jwt['iss']
         if issuer != expected_issuer:
-            raise JwtValidationError('Wrong issuer: {}'.format(issuer))
+            raise JwtValidationError(f'Wrong issuer: {issuer}')
     except KeyError as e:
         raise JwtValidationError('Missing issuer') from e
 
@@ -275,10 +274,10 @@ def validate_jwt(decoded_jwt, expected_issuer, expected_domain=None):
     if expected_domain:
         try:
             domain = decoded_jwt['hd']
-            if not domain == expected_domain:
-                raise JwtValidationError('Wrong domain: {}'.format(domain))
+            if domain != expected_domain:
+                raise JwtValidationError(f'Wrong domain: {domain}')
         except KeyError as e:
-            raise JwtValidationError('Missing domain: {}'.format(e)) from e
+            raise JwtValidationError(f'Missing domain: {e}') from e
 
 
 def get_public_key_for_jwt(encoded_jwt, url):
@@ -301,8 +300,7 @@ def get_public_key_for_jwt(encoded_jwt, url):
     if not key_id:
         raise JwtKeyError('Missing key ID field in token header')
     key_cache = get_public_key_for_jwt.key_cache
-    key = key_cache.get(key_id)
-    if key:
+    if key := key_cache.get(key_id):
         return key
 
     # Re-fetch the key file.
@@ -317,11 +315,10 @@ def get_public_key_for_jwt(encoded_jwt, url):
     else:
         key_cache = keys_json
     get_public_key_for_jwt.key_cache = key_cache
-    key = key_cache.get(key_id)
-    if not key:
+    if key := key_cache.get(key_id):
+        return key
+    else:
         raise JwtKeyError('IAP public key {!r} not found'.format(key_id))
-
-    return key
 
 
 def get_oauth2_discovery_document():
@@ -335,8 +332,7 @@ def get_oauth2_discovery_document():
     """
     now = int(time.time())
     cache = get_oauth2_discovery_document.cache
-    discovery_document = cache.get('current')
-    if discovery_document:
+    if discovery_document := cache.get('current'):
         # Check if the document has expired.
         created_at = discovery_document['created_at']
         expires_at = created_at + 12*60*60  # 12 hours in seconds

@@ -83,16 +83,17 @@ class DataFinderResource(resources.ResourceMixin, Resource):
                 HTTP_STATUS_CODE_BAD_REQUEST,
                 'Rule names needs to a list')
 
-        if any([not isinstance(x, str) for x in rule_names]):
+        if any(not isinstance(x, str) for x in rule_names):
             abort(
                 HTTP_STATUS_CODE_BAD_REQUEST,
                 'Rule names needs to a list of string values.')
 
         timeline_ids_read = form.get('timeline_ids', [])
-        timeline_ids = []
-        for timeline in sketch.active_timelines:
-            if timeline.id in timeline_ids_read:
-                timeline_ids.append(timeline.id)
+        timeline_ids = [
+            timeline.id
+            for timeline in sketch.active_timelines
+            if timeline.id in timeline_ids_read
+        ]
 
         parameters = form.get('parameters')
         if parameters and not isinstance(parameters, dict):

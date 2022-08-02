@@ -36,12 +36,7 @@ class User(resource.BaseResource):
             return self._object_data
 
         data = self.data
-        objects = data.get('objects')
-        if objects:
-            self._object_data = objects[0]
-        else:
-            self._object_data = {}
-
+        self._object_data = objects[0] if (objects := data.get('objects')) else {}
         return self._object_data
 
     def change_password(self, new_password):

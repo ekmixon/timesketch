@@ -70,8 +70,6 @@ class SigmaPlugin(interface.BaseAnalyzer):
         if sigma_rules is None:
             logger.error('No  Sigma rules found. Check SIGMA_RULES_FOLDERS')
         problem_strings = []
-        output_strings = []
-
         for rule in sigma_rules:
             tags_applied[rule.get('file_name')] = 0
             try:
@@ -108,12 +106,11 @@ class SigmaPlugin(interface.BaseAnalyzer):
                 continue
 
         total_tagged_events = sum(tags_applied.values())
-        output_strings.append('Applied {0:d} tags'.format(total_tagged_events))
-
+        output_strings = ['Applied {0:d} tags'.format(total_tagged_events)]
         if sigma_rule_counter > 0:
             self.add_sigma_match_view(sigma_rule_counter)
 
-        if len(problem_strings) > 0:
+        if problem_strings:
             output_strings.append('Problematic rules:')
             output_strings.extend(problem_strings)
 

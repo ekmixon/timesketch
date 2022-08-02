@@ -155,24 +155,19 @@ def mock_fetch_oidc_public_keys(unused_argument):
 
 def create_default_payload(audience, issuer):
     now = int(time.time())
-    payload = {
+    return {
         "sub": "1234567890",
         "email": "test@example.com",
         "hd": "example.com",
         "iat": now - 300,  # issued 5 min ago
         "exp": now + 300,  # expires in 5 min
         "aud": audience,
-        "iss": issuer
+        "iss": issuer,
     }
-    return payload
 
 
 def create_default_header(algorithm, key_id):
-    header = {
-        "alg": algorithm,
-        "kid": key_id
-    }
-    return header
+    return {"alg": algorithm, "kid": key_id}
 
 
 def create_mock_jwt(key, algorithm, key_id, audience, issuer, header=None,

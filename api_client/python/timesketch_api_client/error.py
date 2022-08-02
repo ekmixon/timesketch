@@ -46,10 +46,11 @@ def _get_message(response):
     except json.JSONDecodeError:
         return response_text
 
-    if not isinstance(response_dict, dict):
-        return str(response_dict)
-
-    return response_dict.get('message', str(response_dict))
+    return (
+        response_dict.get('message', str(response_dict))
+        if isinstance(response_dict, dict)
+        else str(response_dict)
+    )
 
 
 def _get_reason(response):
@@ -64,10 +65,7 @@ def _get_reason(response):
             response.reason.
     """
     reason = response.reason
-    if isinstance(reason, bytes):
-        return reason.decode('utf-8')
-
-    return reason
+    return reason.decode('utf-8') if isinstance(reason, bytes) else reason
 
 
 def get_response_json(response, logger):

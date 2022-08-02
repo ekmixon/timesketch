@@ -81,8 +81,7 @@ class Graph(resource.SketchResource):
         else:
             raise ValueError('Graph elements missing or not of correct value.')
 
-        graph_config = graph_dict.get('graph_config')
-        if graph_config:
+        if graph_config := graph_dict.get('graph_config'):
             self._graph_config = json.loads(graph_config)
 
         self._created_at = dateutil.parser.parse(
@@ -114,9 +113,7 @@ class Graph(resource.SketchResource):
     @property
     def created_at(self):
         """Property that returns back the creation time of a graph."""
-        if self._created_at:
-            return self._created_at.isoformat()
-        return self._created_at
+        return self._created_at.isoformat() if self._created_at else self._created_at
 
     def delete(self):
         """Deletes the saved graph from the store."""
@@ -166,7 +163,7 @@ class Graph(resource.SketchResource):
             x.get('data', {}).get('name', ''): x.get(
                 'data', {}).get('label', '') for x in edges
         }
-        label_dict.update(edge_dict)
+        label_dict |= edge_dict
 
         label_keys = list(label_dict.keys())
         for key in label_keys:
@@ -370,8 +367,7 @@ class Graph(resource.SketchResource):
     @property
     def plugins(self):
         """Property that returns back the supported plugins."""
-        plugin_dict = self.api.fetch_resource_data('graphs/')
-        return plugin_dict
+        return self.api.fetch_resource_data('graphs/')
 
     @property
     def plugins_table(self):
@@ -429,8 +425,7 @@ class Graph(resource.SketchResource):
 
     def set_layout_type(self, layout_string):
         """Use a layout from the layout strings."""
-        layout = self._GRAPH_LAYOUTS.get(layout_string)
-        if layout:
+        if layout := self._GRAPH_LAYOUTS.get(layout_string):
             self.layout = layout(self.graph)
 
     @property
@@ -477,6 +472,4 @@ class Graph(resource.SketchResource):
     @property
     def updated_at(self):
         """Property that returns back the last updated time of a graph."""
-        if self._updated_at:
-            return self._updated_at.isoformat()
-        return self._updated_at
+        return self._updated_at.isoformat() if self._updated_at else self._updated_at

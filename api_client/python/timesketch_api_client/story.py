@@ -187,9 +187,7 @@ class TextBlock(BaseBlock):
     @property
     def text(self):
         """Returns the text."""
-        if not self._data:
-            return ''
-        return self._data
+        return self._data or ''
 
     @text.setter
     def text(self, new_text):
@@ -238,9 +236,7 @@ class AggregationBlock(BaseBlock):
     @property
     def aggregation(self):
         """Returns the aggregation object."""
-        if self._data:
-            return self._data
-        return None
+        return self._data or None
 
     @aggregation.setter
     def aggregation(self, agg_obj):
@@ -270,16 +266,12 @@ class AggregationBlock(BaseBlock):
     @property
     def table(self):
         """Returns a table view, as a pandas DataFrame."""
-        if not self._data:
-            return pd.DataFrame()
-        return self._data.table
+        return self._data.table if self._data else pd.DataFrame()
 
     @property
     def chart(self):
         """Returns a chart back from the aggregation."""
-        if not self._data:
-            return None
-        return self._data.chart
+        return self._data.chart if self._data else None
 
     def from_dict(self, data_dict):
         """Feed a block from a block dict."""
@@ -310,8 +302,7 @@ class AggregationBlock(BaseBlock):
         if not (self._data or self._agg_dict):
             raise ValueError('No data has been fed to the block.')
 
-        aggregation_obj = self._data
-        if aggregation_obj:
+        if aggregation_obj := self._data:
             if not hasattr(aggregation_obj, 'id'):
                 raise TypeError('Aggregation object is not correctly formed.')
 
@@ -366,9 +357,7 @@ class AggregationGroupBlock(BaseBlock):
     @property
     def group(self):
         """Returns the aggregation group object."""
-        if self._data:
-            return self._data
-        return None
+        return self._data or None
 
     @group.setter
     def group(self, group_obj):
@@ -388,16 +377,12 @@ class AggregationGroupBlock(BaseBlock):
     @property
     def table(self):
         """Returns a table view, as a pandas DataFrame."""
-        if not self._data:
-            return pd.DataFrame()
-        return self._data.table
+        return self._data.table if self._data else pd.DataFrame()
 
     @property
     def chart(self):
         """Returns a chart back from the aggregation."""
-        if not self._data:
-            return None
-        return self._data.chart
+        return self._data.chart if self._data else None
 
     def from_dict(self, data_dict):
         """Feed a block from a block dict."""
@@ -473,12 +458,11 @@ class Story(resource.BaseResource):
         """Returns all the blocks of the story."""
         if not self._blocks:
             story_data = self.lazyload_data(refresh_cache=True)
-            objects = story_data.get('objects')
-            content = ''
-            if objects:
+            if objects := story_data.get('objects'):
                 content = objects[0].get('content', [])
-            index = 0
-            for content_block in json.loads(content):
+            else:
+                content = ''
+            for index, content_block in enumerate(json.loads(content)):
                 name = content_block.get('componentName', '')
                 if content_block.get('content'):
                     block = TextBlock(self, index)
@@ -506,7 +490,6 @@ class Story(resource.BaseResource):
                     group_obj.from_saved(block.group_id)
                     block.feed(group_obj)
                 self._blocks.append(block)
-                index += 1
         return self._blocks
 
     @property
@@ -518,8 +501,7 @@ class Story(resource.BaseResource):
         """
         if not self._title:
             story_data = self.lazyload_data()
-            objects = story_data.get('objects')
-            if objects:
+            if objects := story_data.get('objects'):
                 self._title = objects[0].get('title', 'No Title')
         return self._title
 

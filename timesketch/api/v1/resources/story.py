@@ -57,10 +57,10 @@ class StoryListResource(resources.ResourceMixin, Resource):
             abort(HTTP_STATUS_CODE_FORBIDDEN,
                   'User does not have read access controls on sketch.')
 
-        stories = []
-        for story in Story.query.filter_by(
-                sketch=sketch).order_by(desc(Story.created_at)):
-            stories.append(story)
+        stories = list(
+            Story.query.filter_by(sketch=sketch).order_by(desc(Story.created_at))
+        )
+
         return self.to_json(stories)
 
     @login_required
@@ -86,9 +86,7 @@ class StoryListResource(resources.ResourceMixin, Resource):
             abort(HTTP_STATUS_CODE_FORBIDDEN,
                   'User does not have write access controls on sketch.')
 
-        title = ''
-        if form.title.data:
-            title = form.title.data
+        title = form.title.data or ''
         story = Story(
             title=title, content='[]', sketch=sketch, user=current_user)
         db_session.add(story)

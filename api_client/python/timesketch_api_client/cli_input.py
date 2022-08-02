@@ -38,18 +38,10 @@ def ask_question(
         object: The value (type of input_type) that is ready by the user.
     """
     if hide_input:
-        if default:
-            hint = '**'
-        else:
-            hint = ''
-
+        hint = '**' if default else ''
         return getpass.getpass(f'{question} [{hint}] ')
 
-    if default:
-        ask = f'{question} [{default}]'
-    else:
-        ask = question
-
+    ask = f'{question} [{default}]' if default else question
     answer = input(f'{ask}: ')
     return input_type(answer)
 
@@ -72,10 +64,7 @@ def confirm_choice(
     Returns:
         bool: False if the user entered no, True if the user entered yes
     """
-    if default:
-        hint = 'Y/n'
-    else:
-        hint = 'y/N'
+    hint = 'Y/n' if default else 'y/N'
     answer = input(f'{choice} [{hint}]: ')
 
     value = None

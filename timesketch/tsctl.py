@@ -61,9 +61,9 @@ class DropDataBaseTables(Command):
     # pylint: disable=method-hidden
     def run(self):
         """Drop all tables after user ha verified."""
-        verified = prompt_bool(
-            'Do you really want to drop all the database tables?')
-        if verified:
+        if verified := prompt_bool(
+            'Do you really want to drop all the database tables?'
+        ):
             sys.stdout.write('All tables dropped. Database is now empty.\n')
             drop_all()
 
@@ -135,10 +135,7 @@ class ListUsers(Command):
     def run(self):
         """The run method for the command."""
         for user in User.query.all():
-            if user.admin:
-                extra = ' (admin)'
-            else:
-                extra = ''
+            extra = ' (admin)' if user.admin else ''
             print('{0:s}{1:s}'.format(user.username, extra))
 
 
@@ -203,10 +200,7 @@ class GroupManager(Command):
 
         if not isinstance(user_name, six.text_type):
             user_name = codecs.decode(user_name, 'utf-8')
-        user = None
-        if user_name:
-            user = User.query.filter_by(username=user_name).first()
-
+        user = User.query.filter_by(username=user_name).first() if user_name else None
         # Add or remove user from group
         if remove and user:
             try:
@@ -287,18 +281,18 @@ class PurgeTimeline(Command):
             port=current_app.config['ELASTIC_PORT'])
 
         timelines = Timeline.query.filter_by(searchindex=searchindex).all()
-        sketches = [
-            t.sketch for t in timelines
+        if sketches := [
+            t.sketch
+            for t in timelines
             if t.sketch and t.sketch.get_status.status != 'deleted'
-        ]
-        if sketches:
+        ]:
             sys.stdout.write('WARNING: This timeline is in use by:\n')
             for sketch in sketches:
                 sys.stdout.write(' * {0:s}\n'.format(sketch.name))
                 sys.stdout.flush()
-        really_delete = prompt_bool(
-            'Are you sure you want to delete this timeline?')
-        if really_delete:
+        if really_delete := prompt_bool(
+            'Are you sure you want to delete this timeline?'
+        ):
             for timeline in timelines:
                 db_session.delete(timeline)
             db_session.delete(searchindex)
@@ -387,8 +381,8 @@ class ListSketches(Command):
         """The run method for the command."""
         sketches = Sketch.query.all()
 
-        name_len = max([len(x.name) for x in sketches])
-        desc_len = max([len(x.description) for x in sketches])
+        name_len = max(len(x.name) for x in sketches)
+        desc_len = max(len(x.description) for x in sketches)
 
         if not name_len:
             name_len = 5

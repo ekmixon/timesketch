@@ -62,9 +62,11 @@ class QueryTest(interface.BaseEndToEndTest):
 
         strings_frame = data_frame.apply(extract_strings, axis=1)
         services = set(strings_frame.service.unique())
-        expected_set = set([
+        expected_set = {
             'Background Intelligent Transfer Service',
-            'Windows Modules Installer'])
+            'Windows Modules Installer',
+        }
+
         self.assertions.assertSetEqual(services, expected_set)
 
         search_name = 'My First Search'

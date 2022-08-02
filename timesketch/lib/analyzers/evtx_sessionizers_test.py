@@ -217,9 +217,11 @@ class TestWinEXTXSessionizerPlugin(BaseTest):
             self.assertEqual(event2['_source']['session_id']
                              [analyzer.session_type], ['1 (USER_2)'])
             event3 = datastore.event_store['2']
-            self.assertEqual(set(event3['_source']['session_id']
-                                 [analyzer.session_type]),
-                             set(['0 (USER_1)', '1 (USER_2)']))
+            self.assertEqual(
+                set(event3['_source']['session_id'][analyzer.session_type]),
+                {'0 (USER_1)', '1 (USER_2)'},
+            )
+
             event4 = datastore.event_store['3']
             self.assertTrue(event4['_source'].get('session_id') is None or
                             event4['_source']['session_id'].get(
@@ -447,10 +449,9 @@ def _create_mock_event(datastore, event_id, quantity, time_diffs=None,
     #similarly for source_attrs
     if source_attrs is None:
         source_attrs = [None] * quantity
-    else:
-        if quantity - len(source_attrs) > 0:
-            source_attrs.extend([source_attrs[-1]] *
-                                (quantity - len(source_attrs)))
+    elif quantity - len(source_attrs) > 0:
+        source_attrs.extend([source_attrs[-1]] *
+                            (quantity - len(source_attrs)))
 
     event_timestamp = 1410895419859714
 

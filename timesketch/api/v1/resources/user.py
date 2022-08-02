@@ -122,8 +122,7 @@ class CollaboratorResource(resources.ResourceMixin, Resource):
                 HTTP_STATUS_CODE_FORBIDDEN,
                 'The user does not have write permission on the sketch.')
 
-        permission_string = form.get('permissions', '')
-        if permission_string:
+        if permission_string := form.get('permissions', ''):
             try:
                 permissions = json.loads(permission_string)
             except json.JSONDecodeError:

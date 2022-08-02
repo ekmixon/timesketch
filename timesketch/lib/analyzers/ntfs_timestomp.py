@@ -92,7 +92,7 @@ class NtfsTimestompSketchPlugin(interface.BaseAnalyzer):
             query_string=query, return_fields=return_fields)
 
         # Dict timestamp_type + "&" + file_ref -> FileInfo
-        file_infos = dict()
+        file_infos = {}
 
         for event in events:
             attribute_type = event.source.get('attribute_type')

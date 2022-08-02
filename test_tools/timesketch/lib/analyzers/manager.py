@@ -61,12 +61,12 @@ class AnalysisManager(object):
             dependency_tree.append(dependency_set)
 
             # Let's remove the entries already in the tree and start again.
-            new_dependencies = {}
-            for analyzer_name, analyzer_dependencies in dependencies.items():
-                if not analyzer_dependencies:
-                    continue
-                new_dependencies[analyzer_name] = list(
-                    set(analyzer_dependencies) - dependency_set)
+            new_dependencies = {
+                analyzer_name: list(set(analyzer_dependencies) - dependency_set)
+                for analyzer_name, analyzer_dependencies in dependencies.items()
+                if analyzer_dependencies
+            }
+
             dependencies = new_dependencies
 
         return dependency_tree

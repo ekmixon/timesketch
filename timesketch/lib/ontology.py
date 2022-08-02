@@ -121,9 +121,7 @@ class BoolOntology(OntologyInterface):
     @staticmethod
     def encode(data):
         """Returns an encoded string that can be stored in the database."""
-        if data:
-            return 'true'
-        return 'false'
+        return 'true' if data else 'false'
 
     @staticmethod
     def decode(data):

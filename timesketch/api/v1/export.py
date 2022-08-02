@@ -100,10 +100,7 @@ def export_story(story, sketch, story_exporter, zip_file):
         exporter.set_data_fetcher(data_fetcher)
         exporter.from_string(story.content)
         exporter.set_creation_date(story.created_at.isoformat())
-        if story.user:
-            author = story.user.username
-        else:
-            author = 'System'
+        author = story.user.username if story.user else 'System'
         exporter.set_author(author)
         exporter.set_title(story.title)
 
@@ -212,9 +209,8 @@ def query_results_to_dataframe(result, sketch):
         line['_id'] = event['_id']
         line['_type'] = event['_type']
         line['_index'] = event['_index']
-        if 'tag' in line:
-            if isinstance(line['tag'], (list, tuple)):
-                line['tag'] = ','.join(line['tag'])
+        if 'tag' in line and isinstance(line['tag'], (list, tuple)):
+            line['tag'] = ','.join(line['tag'])
         try:
             for label in line['timesketch_label']:
                 if sketch.id != label['sketch_id']:

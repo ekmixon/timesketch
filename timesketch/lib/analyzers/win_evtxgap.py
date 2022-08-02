@@ -28,7 +28,7 @@ def get_range(my_list, complete_list):
     list_length = len(my_list)
     cur_first = my_list[0]
 
-    for index in range(0, list_length):
+    for index in range(list_length):
         cur_item = my_list[index]
         try:
             cur_index = complete_list.index(cur_item)

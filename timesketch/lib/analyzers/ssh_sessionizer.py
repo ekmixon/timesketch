@@ -68,9 +68,7 @@ class SSHSessionizerSketchPlugin(sessionizer.SessionizerSketchPlugin):
 
         for event in events:
             event_message = event.source.get('message')
-            connection_match = SSH_CONNECTION_PATTERN.match(event_message)
-
-            if connection_match:
+            if connection_match := SSH_CONNECTION_PATTERN.match(event_message):
                 process_id = connection_match.group('process_id')
                 client_ip = connection_match.group('client_ip')
                 client_port = connection_match.group('client_port')
@@ -79,10 +77,9 @@ class SSHSessionizerSketchPlugin(sessionizer.SessionizerSketchPlugin):
                 started_sessions_ids[process_id] = session_id
                 self.session_num += 1
 
-            ssh_match = SSH_PATTERN.match(event_message)
-            if ssh_match:
+            if ssh_match := SSH_PATTERN.match(event_message):
                 process_id = ssh_match.group('process_id')
-                if process_id in started_sessions_ids.keys():
+                if process_id in started_sessions_ids:
                     self.annotateEvent(event, started_sessions_ids[process_id])
 
         self.sketch.add_view(

@@ -33,7 +33,7 @@ def when_ready(server):
 
     # Clean up andy old prometheus database files
     if os.path.isdir(METRICS_DB_DIR):
-        files = glob.glob(METRICS_DB_DIR + '/*.db')
+        files = glob.glob(f'{METRICS_DB_DIR}/*.db')
         for file in files:
             os.remove(file)
     else:

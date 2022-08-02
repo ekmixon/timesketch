@@ -49,9 +49,7 @@ class TaggerSketchPlugin(interface.BaseAnalyzer):
             if tag_result and not tag_result.startswith('0 events tagged'):
                 tag_results.append(tag_result)
 
-        if tag_results:
-            return ', '.join(tag_results)
-        return 'No tags applied'
+        return ', '.join(tag_results) if tag_results else 'No tags applied'
 
     def tagger(self, name, config):
         """Tag and add emojis to events.
@@ -89,8 +87,7 @@ class TaggerSketchPlugin(interface.BaseAnalyzer):
                 expression_string=expression_string,
                 expression_flags=config.get('re_flags'))
 
-            attribute = config.get('re_attribute')
-            if attribute:
+            if attribute := config.get('re_attribute'):
                 attributes = [attribute]
 
         event_counter = 0
@@ -99,8 +96,7 @@ class TaggerSketchPlugin(interface.BaseAnalyzer):
 
         for event in events:
             if expression:
-                value = event.source.get(attributes[0])
-                if value:
+                if value := event.source.get(attributes[0]):
                     result = expression.findall(value)
                     if not result:
                         # Skip counting this tag since the regular expression

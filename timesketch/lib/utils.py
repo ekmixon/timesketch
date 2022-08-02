@@ -78,10 +78,7 @@ def _parse_tag_field(row):
     if row == '-':
         return []
 
-    if ',' in row:
-        return row.split(',')
-
-    return [row]
+    return row.split(',') if ',' in row else [row]
 
 
 def _scrub_special_tags(dict_obj):
@@ -219,11 +216,13 @@ def read_and_validate_redline(file_handle):
         alert = row['Alert']
         tag = row['Tag']
 
-        row_to_yield = {}
-        row_to_yield['message'] = summary
-        row_to_yield['timestamp'] = timestamp
-        row_to_yield['datetime'] = dt_iso_format
-        row_to_yield['timestamp_desc'] = timestamp_desc
+        row_to_yield = {
+            'message': summary,
+            'timestamp': timestamp,
+            'datetime': dt_iso_format,
+            'timestamp_desc': timestamp_desc,
+        }
+
         tags = [tag]
         row_to_yield['alert'] = alert  # Extra field
         row_to_yield['tag'] = tags  # Extra field
@@ -265,8 +264,9 @@ def read_and_validate_jsonl(file_handle):
                         '{0:d}'.format(lineno), exc_info=True)
                     continue
 
-            missing_fields = [x for x in mandatory_fields if x not in linedict]
-            if missing_fields:
+            if missing_fields := [
+                x for x in mandatory_fields if x not in linedict
+            ]:
                 raise RuntimeError(
                     'Missing field(s) at line {0:n}: {1:s}'.format(
                         lineno, ','.join(missing_fields)))
@@ -372,10 +372,7 @@ def send_email(subject, body, to_username, use_html=False):
     from_address = '{0:s}@{1:s}'.format(email_from_user, email_domain)
     # TODO: Add email address to user object and pick it up from there.
     to_address = '{0:s}@{1:s}'.format(to_username, email_domain)
-    email_content_type = 'text'
-    if use_html:
-        email_content_type = 'text/html'
-
+    email_content_type = 'text/html' if use_html else 'text'
     msg = email.message.Message()
     msg['Subject'] = subject
     msg['From'] = from_address

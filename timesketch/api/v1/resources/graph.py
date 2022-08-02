@@ -128,7 +128,7 @@ class GraphResource(resources.ResourceMixin, Resource):
         if not graph:
             abort(HTTP_STATUS_CODE_NOT_FOUND, 'No graph found with this ID.')
 
-        if not sketch.id == graph.sketch.id:
+        if sketch.id != graph.sketch.id:
             abort(
                 HTTP_STATUS_CODE_BAD_REQUEST,
                 'Graph does not belong to this sketch.')
@@ -184,7 +184,7 @@ class GraphResource(resources.ResourceMixin, Resource):
         if not graph:
             abort(HTTP_STATUS_CODE_NOT_FOUND, 'No graph found with this ID.')
 
-        if not sketch.id == graph.sketch.id:
+        if sketch.id != graph.sketch.id:
             abort(
                 HTTP_STATUS_CODE_BAD_REQUEST,
                 'Graph does not belong to this sketch.')
@@ -193,16 +193,13 @@ class GraphResource(resources.ResourceMixin, Resource):
         if not form:
             form = request.data
 
-        name = form.get('name')
-        if name:
+        if name := form.get('name'):
             graph.name = name
 
-        description = form.get('description')
-        if description:
+        if description := form.get('description'):
             graph.description = description
 
-        elements = form.get('elements')
-        if elements:
+        if elements := form.get('elements'):
             graph.graph_elements = json.dumps(elements)
 
         graph_config = form.get('graph_config')
@@ -311,8 +308,7 @@ class GraphCacheResource(resources.ResourceMixin, Resource):
                 HTTP_STATUS_CODE_BAD_REQUEST,
                 'Timeline IDs if supplied need to be a list.')
 
-        if timeline_ids and not all(
-                [isinstance(x, int) for x in timeline_ids]):
+        if timeline_ids and not all(isinstance(x, int) for x in timeline_ids):
             abort(
                 HTTP_STATUS_CODE_BAD_REQUEST,
                 'Timeline IDs needs to be a list of integers.')
@@ -325,11 +321,7 @@ class GraphCacheResource(resources.ResourceMixin, Resource):
         cache = GraphCache.get_or_create(
             sketch=sketch, graph_plugin=plugin_name)
 
-        if graph_config:
-            cache_config = graph_config
-        else:
-            cache_config = cache.graph_config
-
+        cache_config = graph_config or cache.graph_config
         if isinstance(cache_config, str):
             cache_config = json.loads(cache_config)
 
@@ -345,9 +337,7 @@ class GraphCacheResource(resources.ResourceMixin, Resource):
 
         graph_class = manager.GraphManager.get_graph(plugin_name)
         graph = graph_class(sketch=sketch, timeline_ids=timeline_ids)
-        cytoscape_json = graph.generate().to_cytoscape()
-
-        if cytoscape_json:
+        if cytoscape_json := graph.generate().to_cytoscape():
             cache.graph_elements = json.dumps(cytoscape_json)
             cache.graph_config = json.dumps(graph_config)
             cache.update_modification_time()

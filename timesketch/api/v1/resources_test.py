@@ -287,7 +287,9 @@ class EventResourceTest(BaseTest):
         """
         self.login()
         response_400 = self.client.get(
-            self.resource_url + '?searchindex_id=wrong_index&event_id=test')
+            f'{self.resource_url}?searchindex_id=wrong_index&event_id=test'
+        )
+
         self.assert400(response_400)
 
 

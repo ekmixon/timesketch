@@ -92,9 +92,11 @@ class WinCrashSketchPlugin(interface.BaseAnalyzer):
         Returns:
             The Elasticsearch query
         """
-        conditions = list()
-        for element_list in elements.values():
-            conditions += ['({0})'.format(' AND '.join(element_list))]
+        conditions = [
+            '({0})'.format(' AND '.join(element_list))
+            for element_list in elements.values()
+        ]
+
         return ' OR '.join(conditions)
 
     def extract_filename(self, text):
@@ -107,11 +109,10 @@ class WinCrashSketchPlugin(interface.BaseAnalyzer):
             The string with filename if found
         """
         if '.exe' in str(text or '').lower():
-            match = self.FILENAME_REGEX.search(text)
-            if match:
+            if match := self.FILENAME_REGEX.search(text):
                 # The regex can match on full file paths and filenames,
                 # so only return the filename.
-                return min([m for m in match.groups() if m])
+                return min(m for m in match.groups() if m)
         return ''
 
     def mark_as_crash(self, event, filename):
@@ -165,9 +166,7 @@ class WinCrashSketchPlugin(interface.BaseAnalyzer):
             elif data_type == 'fs:stat':
                 event_text = event.source.get('filename')
 
-            # If found the filename, tag the entry as crash-related
-            filename = self.extract_filename(event_text)
-            if filename:
+            if filename := self.extract_filename(event_text):
                 self.mark_as_crash(event, filename)
                 filenames.add(filename)
                 event.commit()
@@ -179,7 +178,7 @@ class WinCrashSketchPlugin(interface.BaseAnalyzer):
                 query_string='tag:"win_crash"')
 
         return 'Windows Crash analyzer completed, ' + \
-            '{0:d} crashed application{1:s} identified: {2:s}'.format(
+                '{0:d} crashed application{1:s} identified: {2:s}'.format(
                 len(filenames),
                 's' if len(filenames) > 1 else '',
                 ', '.join(filenames))

@@ -52,8 +52,7 @@ def load_config(file_path=''):
 
     with codecs.open(file_path, 'r') as fh:
         try:
-            data = yaml.safe_load(fh)
-            return data
+            return yaml.safe_load(fh)
         except (AttributeError, yaml.parser.ParserError) as e:
             logger.error('Unable to parse YAML file, with error: %s', e)
             return {}

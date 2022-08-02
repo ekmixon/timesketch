@@ -81,9 +81,7 @@ class Aggregation(resource.SketchResource):
             for key, value in iter(entry.items()):
                 if not isinstance(value, dict):
                     continue
-                for bucket in self._get_aggregation_buckets(
-                        value, name=key):
-                    yield bucket
+                yield from self._get_aggregation_buckets(value, name=key)
 
     def _run_aggregator(
             self, aggregator_name, parameters, search_id=None, chart_type=None):
@@ -154,15 +152,13 @@ class Aggregation(resource.SketchResource):
         self._updated_at = data.get('updated_at', '')
         self._group_id = data.get('aggregationgroup_id')
 
-        label_string = data.get('label_string', '')
-        if label_string:
+        if label_string := data.get('label_string', ''):
             self._labels = json.loads(label_string)
         else:
             self._labels = []
 
         chart_type = data.get('chart_type')
-        param_string = data.get('parameters', '')
-        if param_string:
+        if param_string := data.get('parameters', ''):
             parameters = json.loads(param_string)
         else:
             parameters = {}
@@ -237,10 +233,6 @@ class Aggregation(resource.SketchResource):
         Returns:
             Dictionary with resource data.
         """
-        if self.resource_data and not refresh_cache:
-            return self.resource_data
-
-        # TODO: Implement a method to refresh cache.
         return self.resource_data
 
     @property
@@ -251,10 +243,7 @@ class Aggregation(resource.SketchResource):
     @property
     def is_part_of_group(self):
         """Property that returns whether an agg is part of a group or not."""
-        if self._group_id is None:
-            return False
-
-        return bool(self._group_id)
+        return False if self._group_id is None else bool(self._group_id)
 
     @property
     def title(self):
@@ -298,10 +287,7 @@ class Aggregation(resource.SketchResource):
         """Property that returns the name of the aggregation."""
         data = self.resource_data
         meta = data.get('meta', {})
-        name = meta.get('name')
-        if name:
-            return name
-        return self.aggregator_name
+        return name if (name := meta.get('name')) else self.aggregator_name
 
     @name.setter
     def name(self, name):
@@ -338,8 +324,7 @@ class Aggregation(resource.SketchResource):
         panda_list = []
         data = self.lazyload_data()
         for entry in data.get('objects', []):
-            for bucket in self._get_aggregation_buckets(entry):
-                panda_list.append(bucket)
+            panda_list.extend(iter(self._get_aggregation_buckets(entry)))
         return pandas.DataFrame(panda_list)
 
     @property
@@ -457,9 +442,7 @@ class AggregationGroup(resource.SketchResource):
     @property
     def chart(self):
         """Property that returns an altair Vega-lite chart."""
-        if not self._aggregations:
-            return altair.Chart()
-        return self.generate_chart()
+        return self.generate_chart() if self._aggregations else altair.Chart()
 
     @property
     def description(self):
@@ -546,8 +529,7 @@ class AggregationGroup(resource.SketchResource):
         if not self._orientation:
             raise TypeError('How a group is connected needs to be defined.')
 
-        parameter_string = group_dict.get('parameters', '')
-        if parameter_string:
+        if parameter_string := group_dict.get('parameters', ''):
             self._parameters = json.loads(parameter_string)
 
         aggs = group_dict.get('agg_ids')
@@ -652,8 +634,5 @@ class AggregationGroup(resource.SketchResource):
         if not self._aggregations:
             return pandas.DataFrame()
 
-        data_frames = []
-        for agg_obj in self._aggregations:
-            data_frames.append(agg_obj.to_pandas())
-
+        data_frames = [agg_obj.to_pandas() for agg_obj in self._aggregations]
         return pandas.concat(data_frames)

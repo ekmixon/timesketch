@@ -299,8 +299,7 @@ class ViewResource(resources.ResourceMixin, Resource):
                 'Unable to update view, view not attached to sketch.')
 
         view.query_string = form.query.data
-        description = form.description.data
-        if description:
+        if description := form.description.data:
             view.description = description
 
         query_filter = form.filter.data
@@ -313,8 +312,7 @@ class ViewResource(resources.ResourceMixin, Resource):
 
         view.query_dsl = json.dumps(form.dsl.data, ensure_ascii=False)
 
-        name = form.name.data
-        if name:
+        if name := form.name.data:
             view.name = name
 
         view.user = current_user

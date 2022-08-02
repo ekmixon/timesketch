@@ -186,13 +186,7 @@ class MockDataStore(object):
         Returns:
             A dictionary with search result or integer if count is requested.
         """
-        if kwargs.get('count'):
-            # 4711 is sometimes used instead of 17, on occasions when you want
-            # to denote a slightly larger number. Probably comes from the name
-            # of 'genuine' Eau-de-cologne, 'No. 4711 ".
-            # Ref: https://hack.org/mc/writings/hackerswe/hackerswe.html
-            return 4711
-        return self.search_result_dict
+        return 4711 if kwargs.get('count') else self.search_result_dict
 
     def get_event(self, searchindex_id, event_id):
         """Mock returning a single event from the datastore.
@@ -363,8 +357,7 @@ class BaseTest(TestCase):
         Returns:
             Flask application (instance of flask.app.Flask)
         """
-        app = create_app(TestConfig)
-        return app
+        return create_app(TestConfig)
 
     def _commit_to_database(self, model):
         """Add object to the database session and commit.
@@ -503,9 +496,11 @@ class BaseTest(TestCase):
         view = View(
             name=name,
             query_string=name,
-            query_filter=json.dumps(dict()),
+            query_filter=json.dumps({}),
             user=user,
-            sketch=sketch)
+            sketch=sketch,
+        )
+
         self._commit_to_database(view)
         return view
 
@@ -518,10 +513,9 @@ class BaseTest(TestCase):
             A search template (timesketch.models.sketch.SearchTemplate)
         """
         searchtemplate = SearchTemplate(
-            name=name,
-            query_string=name,
-            query_filter=json.dumps(dict()),
-            user=user)
+            name=name, query_string=name, query_filter=json.dumps({}), user=user
+        )
+
         self._commit_to_database(searchtemplate)
         return searchtemplate
 

@@ -78,11 +78,7 @@ class SafeBrowsingSketchPlugin(interface.BaseAnalyzer):
             Boolean with the result
         """
 
-        for url_pattern in allowlist:
-            if fnmatch.fnmatchcase(url, url_pattern):
-                return True
-
-        return False
+        return any(fnmatch.fnmatchcase(url, url_pattern) for url_pattern in allowlist)
 
     def _do_safebrowsing_lookup(self, urls, platforms, types):
         """URL lookup against the Safe Browsing API.
@@ -162,12 +158,7 @@ class SafeBrowsingSketchPlugin(interface.BaseAnalyzer):
         Returns:
             String with the URL or empty string if not found
         """
-        m = self._URL_BEGINNING_RE.search(url_entry)
-
-        if m:
-            return m.group(1)
-
-        return ''
+        return m.group(1) if (m := self._URL_BEGINNING_RE.search(url_entry)) else ''
 
     def run(self):
         """Entry point for the analyzer.
@@ -193,12 +184,8 @@ class SafeBrowsingSketchPlugin(interface.BaseAnalyzer):
         urls = {}
 
         for event in events:
-            url = self._sanitize_url(event.source.get('url'))
-
-            if not url:
-                continue
-
-            urls.setdefault(url, []).append(event)
+            if url := self._sanitize_url(event.source.get('url')):
+                urls.setdefault(url, []).append(event)
 
         # Exit early if there are no URLs in the data set to analyze.
         if not urls:
@@ -218,7 +205,7 @@ class SafeBrowsingSketchPlugin(interface.BaseAnalyzer):
                 [],
             )
             for domain in domain_analyzer_allowlisted:
-                url_allowlist.add('*.%s/*' % domain)
+                url_allowlist.add(f'*.{domain}/*')
 
         logger.info(
             '{0:d} entries on the allowlist.'.format(len(url_allowlist)),
@@ -261,19 +248,12 @@ class SafeBrowsingSketchPlugin(interface.BaseAnalyzer):
             for event in urls[url]:
                 tags = ['google-safebrowsing-url']
 
-                threat_type = safebrowsing_result.get('threatType')
-
-                if threat_type:
-                    tags.append(
-                        'google-safebrowsing-%s' % threat_type.lower(),
-                    )
+                if threat_type := safebrowsing_result.get('threatType'):
+                    tags.append(f'google-safebrowsing-{threat_type.lower()}')
 
                 event.add_tags(tags)
 
-                threat_attributes = []
-                for item in safebrowsing_result.items():
-                    threat_attributes.append('%s: %s' % item)
-
+                threat_attributes = ['%s: %s' % item for item in safebrowsing_result.items()]
                 event.add_attributes(
                     {
                         'google-safebrowsing-threat': ', '.join(

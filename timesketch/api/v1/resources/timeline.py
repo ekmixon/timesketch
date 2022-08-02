@@ -264,7 +264,7 @@ class TimelineResource(resources.ResourceMixin, Resource):
                     HTTP_STATUS_CODE_BAD_REQUEST, (
                         'Label needs to be a JSON string that '
                         'converts to a list of strings.'))
-            if not all([isinstance(x, str) for x in labels]):
+            if not all(isinstance(x, str) for x in labels):
                 abort(
                     HTTP_STATUS_CODE_BAD_REQUEST, (
                         'Label needs to be a JSON string that '
@@ -278,16 +278,14 @@ class TimelineResource(resources.ResourceMixin, Resource):
 
             changed = False
             if label_action == 'add':
-                changes = []
-                for label in labels:
-                    changes.append(
-                        self._add_label(timeline=timeline, label=label))
+                changes = [self._add_label(timeline=timeline, label=label) for label in labels]
                 changed = any(changes)
             elif label_action == 'remove':
-                changes = []
-                for label in labels:
-                    changes.append(
-                        self._remove_label(timeline=timeline, label=label))
+                changes = [
+                    self._remove_label(timeline=timeline, label=label)
+                    for label in labels
+                ]
+
                 changed = any(changes)
 
             if not changed:
@@ -385,12 +383,12 @@ class TimelineResource(resources.ResourceMixin, Resource):
                 close_index = False
                 break
 
-            if timeline_.id != timeline_id:
-                # There are more than a single timeline using this index_name,
-                # we can't close it (unless this timeline is archived).
-                if timeline_.get_status.status != 'archived':
-                    close_index = False
-                    break
+            if (
+                timeline_.id != timeline_id
+                and timeline_.get_status.status != 'archived'
+            ):
+                close_index = False
+                break
 
         if close_index:
             try:
@@ -435,11 +433,10 @@ class TimelineCreateResource(resources.ResourceMixin, Resource):
                 HTTP_STATUS_CODE_BAD_REQUEST,
                 'Failed to create timeline, form data not validated')
 
-        sketch_id = form.sketch_id.data
         timeline_name = form.name.data
 
         sketch = None
-        if sketch_id:
+        if sketch_id := form.sketch_id.data:
             sketch = Sketch.query.get_with_acl(sketch_id)
             if not sketch:
                 abort(

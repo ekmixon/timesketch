@@ -132,11 +132,9 @@ class SearchTemplateListResource(resources.ResourceMixin, Resource):
             abort(
                 HTTP_STATUS_CODE_NOT_FOUND, 'No search found with this ID.')
 
-        templates = SearchTemplate.query.filter_by(
-            name=search_obj.name,
-            description=search_obj.description).all()
-
-        if templates:
+        if templates := SearchTemplate.query.filter_by(
+            name=search_obj.name, description=search_obj.description
+        ).all():
             abort(
                 HTTP_STATUS_CODE_BAD_REQUEST,
                 'This search has already been saved as a template.')

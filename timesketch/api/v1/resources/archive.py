@@ -93,12 +93,14 @@ class SketchArchiveResource(resources.ResourceMixin, Resource):
             abort(
                 HTTP_STATUS_CODE_NOT_FOUND, 'No sketch found with this ID.')
 
-        if not sketch.has_permission(current_user, 'read'):
-            if not current_user.admin:
-                abort(
-                    HTTP_STATUS_CODE_FORBIDDEN, (
-                        'User does not have sufficient access rights to '
-                        'read the sketch.'))
+        if (
+            not sketch.has_permission(current_user, 'read')
+            and not current_user.admin
+        ):
+            abort(
+                HTTP_STATUS_CODE_FORBIDDEN, (
+                    'User does not have sufficient access rights to '
+                    'read the sketch.'))
 
         timelines = {
             t.searchindex.index_name: t.get_status.status == 'archived'
@@ -139,12 +141,14 @@ class SketchArchiveResource(resources.ResourceMixin, Resource):
 
         action = form.get('action', '')
         if action == 'archive':
-            if not sketch.has_permission(current_user, 'delete'):
-                if not current_user.admin:
-                    abort(
-                        HTTP_STATUS_CODE_FORBIDDEN,
-                        'User does not have sufficient access rights to '
-                        'delete a sketch.')
+            if (
+                not sketch.has_permission(current_user, 'delete')
+                and not current_user.admin
+            ):
+                abort(
+                    HTTP_STATUS_CODE_FORBIDDEN,
+                    'User does not have sufficient access rights to '
+                    'delete a sketch.')
 
             return self._archive_sketch(sketch)
 
@@ -158,12 +162,14 @@ class SketchArchiveResource(resources.ResourceMixin, Resource):
             return self._export_sketch(sketch)
 
         if action == 'unarchive':
-            if not sketch.has_permission(current_user, 'delete'):
-                if not current_user.admin:
-                    abort(
-                        HTTP_STATUS_CODE_FORBIDDEN,
-                        'User does not have sufficient access rights to '
-                        'unarchive a sketch.')
+            if (
+                not sketch.has_permission(current_user, 'delete')
+                and not current_user.admin
+            ):
+                abort(
+                    HTTP_STATUS_CODE_FORBIDDEN,
+                    'User does not have sufficient access rights to '
+                    'unarchive a sketch.')
 
             return self._unarchive_sketch(sketch)
 
@@ -222,11 +228,11 @@ class SketchArchiveResource(resources.ResourceMixin, Resource):
                     '_id': db_event.document_id,
                     'comment': comment.comment,
                     'comment_date': comment.created_at,
+                    'username': comment.user.username
+                    if comment.user
+                    else 'System',
                 }
-                if not comment.user:
-                    line['username'] = 'System'
-                else:
-                    line['username'] = comment.user.username
+
                 lines.append(line)
         db_frame = pd.DataFrame(lines)
 
@@ -378,8 +384,7 @@ class SketchArchiveResource(resources.ResourceMixin, Resource):
             enable_scroll=True,
             indices=indices)
 
-        scroll_id = result.get('_scroll_id', '')
-        if scroll_id:
+        if scroll_id := result.get('_scroll_id', ''):
             data_frame = export.query_results_to_dataframe(result, sketch)
 
             total_count = result.get(
@@ -418,10 +423,7 @@ class SketchArchiveResource(resources.ResourceMixin, Resource):
         zip_file.writestr(
             'views/{0:s}.csv'.format(name), data=fh.read())
 
-        if not view.user:
-            username = 'System'
-        else:
-            username = view.user.username
+        username = view.user.username if view.user else 'System'
         meta = {
             'name': view.name,
             'view_id': view.id,
@@ -504,9 +506,9 @@ class SketchArchiveResource(resources.ResourceMixin, Resource):
             timeline.set_status(status='archived')
             search_index = timeline.searchindex
 
-            if not all([
-                    x.get_status.status == 'archived'
-                    for x in search_index.timelines]):
+            if any(
+                x.get_status.status != 'archived' for x in search_index.timelines
+            ):
                 continue
             search_index.set_status(status='archived')
             indexes_to_close.append(search_index.index_name)

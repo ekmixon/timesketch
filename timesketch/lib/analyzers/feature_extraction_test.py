@@ -35,23 +35,19 @@ class TestFeatureExtractionPlugin(BaseTest):
         except re.error as exception:
             self.assertIsNone(exception)
 
-        emojis_to_add = config.get('emojis')
-        if emojis_to_add:
+        if emojis_to_add := config.get('emojis'):
             self.assertIsInstance(emojis_to_add, (list, tuple))
             for emoji_name in emojis_to_add:
                 emoji_code = emojis.get_emoji(emoji_name)
                 self.assertNotEqual(emoji_code, '')
 
-        tags = config.get('tags')
-        if tags:
+        if tags := config.get('tags'):
             self.assertIsInstance(tags, (list, tuple))
 
-        create_view = config.get('create_view')
-        if create_view:
+        if create_view := config.get('create_view'):
             self.assertIsInstance(create_view, bool)
 
-        aggregate = config.get('aggregate')
-        if aggregate:
+        if aggregate := config.get('aggregate'):
             self.assertIsInstance(aggregate, bool)
 
     # TODO: Add tests for the feature extraction.

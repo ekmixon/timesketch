@@ -63,7 +63,7 @@ def download_from_gcs(gcs_base_path, filename):
     local_path = os.path.join(args.output, filename)
     blob = bucket.blob(gcs_full_path)
     blob.download_to_filename(local_path)
-    logger.info('Downloaded file from GCS: {}'.format(local_path))
+    logger.info(f'Downloaded file from GCS: {local_path}')
     return local_path
 
 
@@ -86,14 +86,13 @@ def setup_sketch(timeline_name, index_name, username, sketch_id=None):
         if sketch_id:
             try:
                 sketch = Sketch.query.get_with_acl(sketch_id, user=user)
-                logger.info('Using existing sketch: {} ({})'.format(
-                    sketch.name, sketch.id))
+                logger.info(f'Using existing sketch: {sketch.name} ({sketch.id})')
             except Forbidden:
                 pass
 
         if not (sketch or sketch_id):
             # Create a new sketch.
-            sketch_name = 'Turbinia: {}'.format(timeline_name)
+            sketch_name = f'Turbinia: {timeline_name}'
             sketch = Sketch(
                 name=sketch_name, description=sketch_name, user=user)
             # Need to commit here to be able to set permissions later.
@@ -105,8 +104,7 @@ def setup_sketch(timeline_name, index_name, username, sketch_id=None):
             sketch.status.append(sketch.Status(user=None, status='new'))
             db_session.add(sketch)
             db_session.commit()
-            logger.info('Created new sketch: {} ({})'.format(
-                sketch.name, sketch.id))
+            logger.info(f'Created new sketch: {sketch.name} ({sketch.id})')
 
         searchindex = SearchIndex.get_or_create(
             name=timeline_name, description='Created by Turbinia.', user=user,
@@ -182,7 +180,7 @@ def callback(message):
             index_name=index_name, file_extension='plaso', sketch_id=sketch_id,
             timeline_id=timeline_id)
         pipeline.apply_async()
-        logger.info('File sent for indexing: {}'. format(gcs_base_filename))
+        logger.info(f'File sent for indexing: {gcs_base_filename}')
 
 
 if __name__ == '__main__':
@@ -205,6 +203,6 @@ if __name__ == '__main__':
         args.project, args.subscription)
     subscriber.subscribe(subscription_path, callback=callback)
 
-    logger.info('Listening on PubSub queue: {}'.format(args.subscription))
+    logger.info(f'Listening on PubSub queue: {args.subscription}')
     while True:
         time.sleep(10)

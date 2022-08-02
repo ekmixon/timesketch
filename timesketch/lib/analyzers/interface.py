@@ -85,10 +85,7 @@ def get_config_path(file_name):
     path = os.path.join(
         os.path.dirname(__file__), '..', '..', '..', 'data', file_name)
     path = os.path.abspath(path)
-    if os.path.isfile(path):
-        return path
-
-    return None
+    return path if os.path.isfile(path) else None
 
 
 def get_yaml_config(file_name):
@@ -170,11 +167,7 @@ class Event(object):
             event_dict: (optional) Dictionary with updated event attributes.
             Defaults to self.updated_event.
         """
-        if event_dict:
-            event_to_commit = event_dict
-        else:
-            event_to_commit = self.updated_event
-
+        event_to_commit = event_dict or self.updated_event
         if not event_to_commit:
             return
 
@@ -358,11 +351,7 @@ class Sketch(object):
         if not agg_params:
             raise ValueError('Aggregator parameters have to be defined.')
 
-        if view_id:
-            view = View.query.get(view_id)
-        else:
-            view = None
-
+        view = View.query.get(view_id) if view_id else None
         if chart_type:
             agg_params['supported_charts'] = chart_type
 
@@ -390,11 +379,7 @@ class Sketch(object):
         if not name:
             raise ValueError('Aggregator group name needs to be defined.')
 
-        if view_id:
-            view = View.query.get(view_id)
-        else:
-            view = None
-
+        view = View.query.get(view_id) if view_id else None
         if not description:
             description = 'Created by an analyzer'
 
@@ -514,8 +499,7 @@ class Sketch(object):
             List of index names.
         """
         active_timelines = self.sql_sketch.active_timelines
-        indices = [t.searchindex.index_name for t in active_timelines]
-        return indices
+        return [t.searchindex.index_name for t in active_timelines]
 
 
 class AggregationGroup(object):
@@ -641,15 +625,14 @@ class Story(object):
         Returns:
             Dictionary with default block content.
         """
-        block = {
+        return {
             'componentName': '',
             'componentProps': {},
             'content': '',
             'edit': False,
             'showPanel': False,
-            'isActive': False
+            'isActive': False,
         }
-        return block
 
     def _commit(self, block):
         """Commit the Story to database.
@@ -834,11 +817,7 @@ class BaseAnalyzer:
         if not indices:
             indices = [self.index_name]
 
-        if self.timeline_id:
-            timeline_ids = [self.timeline_id]
-        else:
-            timeline_ids = None
-
+        timeline_ids = [self.timeline_id] if self.timeline_id else None
         # Refresh the index to make sure it is searchable.
         for index in indices:
             try:
@@ -931,11 +910,7 @@ class BaseAnalyzer:
             raise ValueError(
                 'Unable to query for analyzers, discovered no index to query.')
 
-        if self.timeline_id:
-            timeline_ids = [self.timeline_id]
-        else:
-            timeline_ids = None
-
+        timeline_ids = [self.timeline_id] if self.timeline_id else None
         event_generator = self.datastore.search_stream(
             query_string=query_string,
             query_filter=query_filter,

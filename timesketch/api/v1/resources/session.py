@@ -98,7 +98,7 @@ class SessionResource(resources.ResourceMixin, Resource):
         ts_query_string = ts_filter['bool']['must'][0]['query_string']
 
         for session_type in session_types:
-            id_terms['field'] = 'session_id.{}.keyword'.format(session_type)
+            id_terms['field'] = f'session_id.{session_type}.keyword'
             # pylint: disable=unexpected-keyword-arg
             id_agg = self.datastore.client.search(index=list(sketch_indices),
                                                   body=id_agg_spec,
@@ -113,9 +113,7 @@ class SessionResource(resources.ResourceMixin, Resource):
                 session_count += 1
 
                 session_id = bucket['key']
-                ts_query_string['query'] = 'session_id.{}:{}'.format(
-                    session_type,
-                    session_id)
+                ts_query_string['query'] = f'session_id.{session_type}:{session_id}'
                 ts_agg = self.datastore.client.search(
                     index=list(sketch_indices),
                     body=ts_agg_spec,

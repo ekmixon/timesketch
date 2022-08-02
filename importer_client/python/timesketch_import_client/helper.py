@@ -28,10 +28,7 @@ class ImportHelper:
 
     def __init__(self, load_default=True):
         """Initialize the helper class."""
-        if load_default:
-            self._data = data_config.load_config()
-        else:
-            self._data = {}
+        self._data = data_config.load_config() if load_default else {}
 
     def _configure_streamer(self, streamer, config_dict):
         """Sets up the streamer based on a configuration dict.
@@ -41,24 +38,19 @@ class ImportHelper:
             config_dict (dict): A dictionary that contains
                 configuration details for the streamer.
         """
-        message = config_dict.get('message')
-        if message:
+        if message := config_dict.get('message'):
             streamer.set_message_format_string(message)
 
-        timestamp_desc = config_dict.get('timestamp_desc')
-        if timestamp_desc:
+        if timestamp_desc := config_dict.get('timestamp_desc'):
             streamer.set_timestamp_description(timestamp_desc)
 
-        separator = config_dict.get('separator')
-        if separator:
+        if separator := config_dict.get('separator'):
             streamer.set_csv_delimiter(separator)
 
-        encoding = config_dict.get('encoding')
-        if encoding:
+        if encoding := config_dict.get('encoding'):
             streamer.set_text_encoding(encoding)
 
-        datetime_string = config_dict.get('datetime')
-        if datetime_string:
+        if datetime_string := config_dict.get('datetime'):
             streamer.set_datetime_column(datetime_string)
 
     def add_config(self, file_path):
@@ -91,7 +83,7 @@ class ImportHelper:
             raise ValueError(
                 'Unable to read config file since it does not produce a dict')
 
-        if not all([isinstance(x, dict) for x in config.values()]):
+        if not all(isinstance(x, dict) for x in config.values()):
             raise ValueError(
                 'The config needs to a dict that contains other dict '
                 'attributes.')

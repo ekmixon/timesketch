@@ -51,9 +51,7 @@ class Sigma(resource.BaseResource):
 
     def get_attribute(self, key):
         """Get a value for a given key in case it has no dedicated property"""
-        if not self._attr_dict:
-            return ''
-        return self._attr_dict.get(key, '')
+        return self._attr_dict.get(key, '') if self._attr_dict else ''
 
     @property
     def es_query(self):

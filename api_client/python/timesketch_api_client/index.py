@@ -50,10 +50,7 @@ class SearchIndex(resource.BaseResource):
         """Returns the object dict from the resources dict."""
         data = self.lazyload_data()
         objects = data.get('objects', [])
-        if not objects:
-            return {}
-
-        return objects[0]
+        return objects[0] if objects else {}
 
     @property
     def fields(self):
@@ -85,8 +82,7 @@ class SearchIndex(resource.BaseResource):
         if not index_data:
             return self._labels
 
-        label_string = index_data.get('label_string', '')
-        if label_string:
+        if label_string := index_data.get('label_string', ''):
             self._labels = json.loads(label_string)
         else:
             self._labels = []

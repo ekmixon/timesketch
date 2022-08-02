@@ -153,9 +153,7 @@ class DateIntervalChip(Chip):
     @property
     def date(self):
         """Property that returns back the date."""
-        if not self._date:
-            return ''
-        return self._date.strftime(self._DATE_FORMAT)
+        return self._date.strftime(self._DATE_FORMAT) if self._date else ''
 
     @date.setter
     def date(self, date):
@@ -251,9 +249,7 @@ class DateRangeChip(Chip):
     @property
     def end_time(self):
         """Property that returns the end time of a range."""
-        if not self._end_date:
-            return ''
-        return self._end_date.strftime(self._DATE_FORMAT)
+        return self._end_date.strftime(self._DATE_FORMAT) if self._end_date else ''
 
     @end_time.setter
     def end_time(self, end_time):
@@ -284,9 +280,7 @@ class DateRangeChip(Chip):
     @property
     def start_time(self):
         """Property that returns the start time of a range."""
-        if not self._start_date:
-            return ''
-        return self._start_date.strftime(self._DATE_FORMAT)
+        return self._start_date.strftime(self._DATE_FORMAT) if self._start_date else ''
 
     @start_time.setter
     def start_time(self, start_time):
@@ -307,11 +301,10 @@ class LabelChip(Chip):
 
     def from_dict(self, chip_dict):
         """Configure the chip from a dictionary."""
-        chip_value = chip_dict.get('value')
-        if not chip_value:
+        if chip_value := chip_dict.get('value'):
+            self.label = chip_value
+        else:
             return
-
-        self.label = chip_value
 
     @property
     def label(self):
@@ -492,10 +485,9 @@ class Search(resource.SketchResource):
 
         count = len(response_json.get('objects', []))
         total_count = count
-        while count > 0:
-            if self._max_entries and total_count >= self._max_entries:
-                break
-
+        while count > 0 and not (
+            self._max_entries and total_count >= self._max_entries
+        ):
             if not scroll_id:
                 logger.debug('No scroll ID, will stop.')
                 break
@@ -651,7 +643,7 @@ class Search(resource.SketchResource):
 
         self.resource_data = {}
 
-    def from_saved(self, search_id):  # pylint: disable=arguments-differ
+    def from_saved(self, search_id):    # pylint: disable=arguments-differ
         """Initialize the search object from a saved search.
 
         Args:
@@ -666,8 +658,7 @@ class Search(resource.SketchResource):
             logger.error('Unable to get any data back from a saved search.')
             return
 
-        label_string = data.get('label_string', '')
-        if label_string:
+        if label_string := data.get('label_string', ''):
             self._labels = json.loads(label_string)
         else:
             self._labels = []
@@ -677,8 +668,7 @@ class Search(resource.SketchResource):
         self._description = data.get('description', '')
         self._name = data.get('name', '')
         self.query_dsl = data.get('query_dsl', '')
-        query_filter = data.get('query_filter', '')
-        if query_filter:
+        if query_filter := data.get('query_filter', ''):
             filter_dict = json.loads(query_filter)
             if 'fields' in filter_dict:
                 fields = filter_dict.pop('fields')
@@ -750,15 +740,13 @@ class Search(resource.SketchResource):
                 continue
 
             # Is this a timeline ID?
-            if isinstance(index, int):
-                if index in valid_ids:
-                    new_indices.append(str(index))
-                    continue
+            if isinstance(index, int) and index in valid_ids:
+                new_indices.append(str(index))
+                continue
 
-            if index.isdigit():
-                if int(index) in valid_ids:
-                    new_indices.append(index)
-                    continue
+            if index.isdigit() and int(index) in valid_ids:
+                new_indices.append(index)
+                continue
 
             # Is this a timeline name?
             if index in timeline_names:
@@ -924,7 +912,7 @@ class Search(resource.SketchResource):
             raise ValueError(
                 'No name for the query saved. Please select a name first.')
 
-        if not (self.query_string or self.query_dsl):
+        if not self.query_string and not self.query_dsl:
             raise ValueError(
                 'Need to have either a query DSL or a query string to be '
                 'able to save the search.')
@@ -950,9 +938,12 @@ class Search(resource.SketchResource):
             use_mappings = []
             for field in self.return_fields.split(','):
                 field = field.strip().lower()
-                for map_entry in mappings:
-                    if map_entry.get('field', '').lower() == field:
-                        use_mappings.append(map_entry)
+                use_mappings.extend(
+                    map_entry
+                    for map_entry in mappings
+                    if map_entry.get('field', '').lower() == field
+                )
+
             query_filter['fields'] = use_mappings
 
         data = {

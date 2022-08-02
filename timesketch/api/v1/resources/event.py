@@ -156,7 +156,7 @@ class EventCreateResource(resources.ResourceMixin, Resource):
                 'Unable to add an event where the attributes are not a '
                 'dict object.')
 
-        event.update(attributes)
+        event |= attributes
 
         tag = form.get('tag', [])
         if not isinstance(tag, list):
@@ -310,10 +310,7 @@ class EventResource(resources.ResourceMixin, Resource):
         comments = []
         if event:
             for comment in event.comments:
-                if not comment.user:
-                    username = 'System'
-                else:
-                    username = comment.user.username
+                username = comment.user.username if comment.user else 'System'
                 comment_dict = {
                     'user': {
                         'username': username,

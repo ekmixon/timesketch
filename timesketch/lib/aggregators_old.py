@@ -117,7 +117,7 @@ def heatmap(es_client, sketch_id, query_string, query_filter, query_dsl,
 
     per_hour = {}
     for day in range(1, 8):
-        for hour in range(0, 24):
+        for hour in range(24):
             per_hour[(day, hour)] = 0
 
     for day_bucket in day_buckets:
@@ -127,7 +127,7 @@ def heatmap(es_client, sketch_id, query_string, query_filter, query_dsl,
         for day_hour in day_hours:
             hour = int(day_hour['key'])
             count = day_hour['doc_count']
-            per_hour[(day, int(hour))] = count
+            per_hour[day, hour] = count
 
     return [dict(day=k[0], hour=k[1], count=v) for k, v in per_hour.items()]
 
@@ -160,11 +160,7 @@ def histogram(es_client, sketch_id, query_string, query_filter, query_dsl,
 
     # Default aggregation config
     interval = 'day'
-    min_doc_count = 10
-
-    if result_count < 10:
-        min_doc_count = 1
-
+    min_doc_count = 1 if result_count < 10 else 10
     aggregation = {
         'histogram': {
             'date_histogram': {

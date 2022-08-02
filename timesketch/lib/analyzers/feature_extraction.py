@@ -174,8 +174,7 @@ class FeatureExtractionSketchPlugin(interface.BaseAnalyzer):
 
         return_strings = []
         for name, feature_config in iter(config.items()):
-            feature_string = self.extract_feature(name, feature_config)
-            if feature_string:
+            if feature_string := self.extract_feature(name, feature_config):
                 return_strings.append(feature_string)
 
         return ', '.join(return_strings)
@@ -205,15 +204,13 @@ class FeatureExtractionSketchPlugin(interface.BaseAnalyzer):
         if len(extracted_value) == 1:
             keep_multi = False
         if type_list:
-            if merge_values and keep_multi:
-                return sorted(list(set(current_val) | set(extracted_value)))
             if merge_values:
+                if keep_multi:
+                    return sorted(list(set(current_val) | set(extracted_value)))
                 if extracted_value[0] not in current_val:
                     current_val.append(extracted_value[0])
                 return sorted(current_val)
-            if keep_multi:
-                return sorted(extracted_value)
-            return [extracted_value[0]]
+            return sorted(extracted_value) if keep_multi else [extracted_value[0]]
         if merge_values and keep_multi:
             list_cur = current_val.split(',')
             merge_list = sorted(list(set(list_cur) | set(extracted_value)))
@@ -222,9 +219,7 @@ class FeatureExtractionSketchPlugin(interface.BaseAnalyzer):
             if extracted_value[0] in current_val:
                 return current_val
             return f'{current_val},{extracted_value[0]}'
-        if keep_multi:
-            return ','.join(extracted_value)
-        return extracted_value[0]
+        return ','.join(extracted_value) if keep_multi else extracted_value[0]
 
     def extract_feature(self, name, config):
         """Extract features from events.

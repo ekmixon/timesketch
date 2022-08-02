@@ -122,11 +122,10 @@ class TimesketchApi:
     @property
     def version(self):
         """Property that returns back the API client version."""
-        version_dict = self.fetch_resource_data('version/')
-        ts_version = None
-        if version_dict:
+        if version_dict := self.fetch_resource_data('version/'):
             ts_version = version_dict.get('meta', {}).get('version')
-
+        else:
+            ts_version = None
         if ts_version:
             return 'API Client: {0:s}\nTS Backend: {1:s}'.format(
                 version.get_version(), ts_version)
@@ -167,10 +166,8 @@ class TimesketchApi:
         csrf_token = None
         if tag:
             csrf_token = tag.get('value')
-        else:
-            tag = soup.find('meta', attrs={'name': 'csrf-token'})
-            if tag:
-                csrf_token = tag.attrs.get('content')
+        elif tag := soup.find('meta', attrs={'name': 'csrf-token'}):
+            csrf_token = tag.attrs.get('content')
 
         if not csrf_token:
             return
@@ -238,7 +235,7 @@ class TimesketchApi:
                     auth_url))
             else:
                 open_browser = input('Open the URL in a browser window? [y/N] ')
-                if open_browser.lower() == 'y' or open_browser.lower() == 'yes':
+                if open_browser.lower() in ['y', 'yes']:
                     webbrowser.open(auth_url)
                 else:
                     print(
@@ -364,13 +361,14 @@ class TimesketchApi:
 
     def get_oauth_token_status(self):
         """Return a dict with OAuth token status, if one exists."""
-        if not self.credentials:
-            return {
-                'status': 'No stored credentials.'}
-        return {
-            'expired': self.credentials.credential.expired,
-            'expiry_time': self.credentials.credential.expiry.isoformat(),
-        }
+        return (
+            {
+                'expired': self.credentials.credential.expired,
+                'expiry_time': self.credentials.credential.expiry.isoformat(),
+            }
+            if self.credentials
+            else {'status': 'No stored credentials.'}
+        )
 
     def get_sketch(self, sketch_id):
         """Get a sketch.
@@ -460,9 +458,9 @@ class TimesketchApi:
             for sketch_dict in response.get('objects', []):
                 sketch_id = sketch_dict['id']
                 sketch_name = sketch_dict['name']
-                sketch_obj = sketch.Sketch(
-                    sketch_id=sketch_id, api=self, sketch_name=sketch_name)
-                yield sketch_obj
+                yield sketch.Sketch(
+                    sketch_id=sketch_id, api=self, sketch_name=sketch_name
+                )
 
     def get_searchindex(self, searchindex_id):
         """Get a searchindex.
@@ -510,9 +508,9 @@ class TimesketchApi:
         for index_dict in response_objects[0]:
             index_id = index_dict['id']
             index_name = index_dict['name']
-            index_obj = index.SearchIndex(
-                searchindex_id=index_id, api=self, searchindex_name=index_name)
-            yield index_obj
+            yield index.SearchIndex(
+                searchindex_id=index_id, api=self, searchindex_name=index_name
+            )
 
     def refresh_oauth_token(self):
         """Refresh an OAUTH token if one is defined."""

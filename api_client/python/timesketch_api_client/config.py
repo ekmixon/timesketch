@@ -470,9 +470,9 @@ def configure_missing_parameters(
 
     for field in config_assistant.missing:
         hint = config_assistant.CONFIG_HINTS.get(field, '')
-        value = cli_input.ask_question(
-            f'What is the value for <{field}> ({hint})', input_type=str)
-        if value:
+        if value := cli_input.ask_question(
+            f'What is the value for <{field}> ({hint})', input_type=str
+        ):
             config_assistant.set_config(field, value)
             just_configured.append(field)
 
@@ -501,9 +501,9 @@ def configure_missing_parameters(
             if not change:
                 continue
             hint = config_assistant.CONFIG_HINTS.get(field, '')
-            value = cli_input.ask_question(
-                f'What is the value for <{field}> ({hint})', input_type=str)
-            if value:
+            if value := cli_input.ask_question(
+                f'What is the value for <{field}> ({hint})', input_type=str
+            ):
                 config_assistant.set_config(field, value)
 
     try:
@@ -533,10 +533,9 @@ def configure_missing_parameters(
 
     username = config_assistant.get_config('username')
     if choice:
-        value = cli_input.ask_question(
-            'What is the username?',
-            input_type=str, default=username)
-        if value:
+        if value := cli_input.ask_question(
+            'What is the username?', input_type=str, default=username
+        ):
             username = value
             config_assistant.set_config('username', value)
 

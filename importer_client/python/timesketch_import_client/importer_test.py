@@ -62,8 +62,6 @@ class TimesketchImporterTest(unittest.TestCase):
 
     def setUp(self):
         """Set up the test data frame."""
-        self.lines = []
-
         dict_one = {
             'timestamp': '2019-02-23T12:51:52',
             'stuff': 'from bar to foobar',
@@ -71,8 +69,6 @@ class TimesketchImporterTest(unittest.TestCase):
             'random_number': 13245,
             'vital_stats': 'gangverk'
         }
-        self.lines.append(dict_one)
-
         dict_two = {
             'timestamp': '2019-06-17T20:11:23',
             'stuff': 'fra sjalfstaedi til sjalfstaedis',
@@ -80,8 +76,6 @@ class TimesketchImporterTest(unittest.TestCase):
             'random_number': 52,
             'vital_stats': 'stolt'
         }
-        self.lines.append(dict_two)
-
         dict_three = {
             'timestamp': '2019-01-03T02:39:42',
             'stuff': 'stordagur',
@@ -89,8 +83,6 @@ class TimesketchImporterTest(unittest.TestCase):
             'random_number': 59913,
             'vital_stats': 'elli'
         }
-        self.lines.append(dict_three)
-
         dict_four = {
             'timestamp': '2019-12-23T23:00:03',
             'stuff': 'sidasti sens ad kaupa gjof',
@@ -98,8 +90,6 @@ class TimesketchImporterTest(unittest.TestCase):
             'random_number': 5231134324,
             'vital_stats': 'stress'
         }
-        self.lines.append(dict_four)
-
         dict_five = {
             'timestamp': '2019-10-31T17:12:44',
             'stuff': 'hraeda hraedur',
@@ -107,8 +97,7 @@ class TimesketchImporterTest(unittest.TestCase):
             'random_number': 420,
             'vital_stats': 'grasker'
         }
-        self.lines.append(dict_five)
-
+        self.lines = [dict_one, dict_two, dict_three, dict_four, dict_five]
         self.frame = pandas.DataFrame(self.lines)
 
     def test_adding_data_frames(self):
@@ -178,18 +167,27 @@ class TimesketchImporterTest(unittest.TestCase):
         self.assertEqual(len(lines), 5)
 
         column_set = set(columns)
-        correct_set = set([
-            'message', 'timestamp_desc', 'datetime', 'timestamp',
-            'vital_stats', 'random_number', 'correct', 'stuff'])
+        correct_set = {
+            'message',
+            'timestamp_desc',
+            'datetime',
+            'timestamp',
+            'vital_stats',
+            'random_number',
+            'correct',
+            'stuff',
+        }
+
 
         self.assertSetEqual(column_set, correct_set)
 
         messages = [x.get('message', 'N/A') for x in lines]
-        message_correct = set([
+        message_correct = {
             'fra sjalfstaedi til sjalfstaedis -> True [52]',
             'from bar to foobar -> False [13245]',
             'sidasti sens ad kaupa gjof -> True [5231134324]',
             'stordagur -> True [59913]',
             'hraeda hraedur -> True [420]',
-        ])
+        }
+
         self.assertSetEqual(set(messages), message_correct)

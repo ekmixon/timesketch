@@ -273,7 +273,7 @@ class ResourceMixin(object):
             Response in json format (instance of flask.wrappers.Response)
         """
         if not meta:
-            meta = dict()
+            meta = {}
 
         schema = {'meta': meta, 'objects': []}
 

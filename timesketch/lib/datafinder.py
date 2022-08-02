@@ -64,7 +64,7 @@ class DataFinder:
 
         re_parameters = self._rule.get('re_parameters', [])
         for parameter in re_parameters:
-            if not parameter in self._parameters:
+            if parameter not in self._parameters:
                 logger.warning(
                     'Parameters are defined, but parameter: [{0:s}] does not '
                     'exist in parameter definitions for the rule.'.format(
@@ -143,8 +143,7 @@ class DataFinder:
                 'perform the search.')
 
         attribute = self._rule.get('attribute')
-        regular_expression = self._rule.get('regular_expression')
-        if regular_expression:
+        if regular_expression := self._rule.get('regular_expression'):
             if not attribute:
                 raise RuntimeError(
                     'Attribute must be set in a rule if a regular expression '
@@ -187,10 +186,7 @@ class DataFinder:
             if not value:
                 logger.warning('Attribute: [{0:s}] is empty'.format(attribute))
 
-            result = expression.findall(value)
-            if not result:
-                continue
-
-            return True, 'Data discovered using Regular Expression'
+            if result := expression.findall(value):
+                return True, 'Data discovered using Regular Expression'
 
         return False, 'No hits discovered'

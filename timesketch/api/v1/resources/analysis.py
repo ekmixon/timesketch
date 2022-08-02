@@ -169,16 +169,14 @@ class AnalyzerRunResource(resources.ResourceMixin, Resource):
             x for x, y in analyzer_manager.AnalysisManager.get_analyzers()]
 
         analyzers = analyzer_manager.AnalysisManager.get_analyzers()
-        analyzers_detail = []
-        for analyzer_name, analyzer_class in analyzers:
-            analyzers_detail.append({
+        return [
+            {
                 'name': analyzer_name,
                 'display_name': analyzer_class.DISPLAY_NAME,
-                'description': analyzer_class.DESCRIPTION
-            })
-
-
-        return analyzers_detail
+                'description': analyzer_class.DESCRIPTION,
+            }
+            for analyzer_name, analyzer_class in analyzers
+        ]
 
     @login_required
     def post(self, sketch_id):
@@ -219,18 +217,16 @@ class AnalyzerRunResource(resources.ResourceMixin, Resource):
                 'Timeline is not part of this sketch')
 
         analyzer_names = form.get('analyzer_names')
-        if analyzer_names:
-            if not isinstance(analyzer_names, (tuple, list)):
-                return abort(
-                    HTTP_STATUS_CODE_BAD_REQUEST,
-                    'Analyzer names needs to be a list of analyzers.')
+        if analyzer_names and not isinstance(analyzer_names, (tuple, list)):
+            return abort(
+                HTTP_STATUS_CODE_BAD_REQUEST,
+                'Analyzer names needs to be a list of analyzers.')
 
         analyzer_kwargs = form.get('analyzer_kwargs')
-        if analyzer_kwargs:
-            if not isinstance(analyzer_kwargs, dict):
-                return abort(
-                    HTTP_STATUS_CODE_BAD_REQUEST,
-                    'Kwargs needs to be a dictionary of parameters.')
+        if analyzer_kwargs and not isinstance(analyzer_kwargs, dict):
+            return abort(
+                HTTP_STATUS_CODE_BAD_REQUEST,
+                'Kwargs needs to be a dictionary of parameters.')
 
         analyzers = []
         all_analyzers = [

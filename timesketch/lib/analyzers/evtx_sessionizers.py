@@ -28,7 +28,7 @@ class WinEVTXSessionizerSketchPlugin(SessionizerSketchPlugin):
                          'record_number', 'session_id']
         last_login_time = 0
         session_num = 0
-        login_events = dict()
+        login_events = {}
         processed = False
 
         while not processed:
@@ -36,7 +36,7 @@ class WinEVTXSessionizerSketchPlugin(SessionizerSketchPlugin):
             events = self.event_stream(query_string=query_string,
                                        return_fields=return_fields)
             last_login_time, session_num, login_events, processed = \
-                self.processSessions(events, session_num, login_events)
+                    self.processSessions(events, session_num, login_events)
 
         msg = 'Sessionizing completed, number of sessions created: {0:d}'
         return msg.format(session_num)
@@ -88,8 +88,7 @@ class WinEVTXSessionizerSketchPlugin(SessionizerSketchPlugin):
 
                 elif event_id in self.end_events:
                     logon_id = self.getLogonId(event, event_id)
-                    session_id = start_events.get(logon_id)
-                    if session_id:
+                    if session_id := start_events.get(logon_id):
                         self.annotateEvent(event, [session_id])
                         del start_events[logon_id]
 
@@ -117,8 +116,7 @@ class WinEVTXSessionizerSketchPlugin(SessionizerSketchPlugin):
         event_data = EVENT_DATA_RE.search(
             event.source.get('xml_string')).group()
         data_name_re = re.compile(r'<Data Name="%s">([^<>]+)<\/Data>' % name)
-        text = data_name_re.search(event_data).group(1)
-        return text
+        return data_name_re.search(event_data)[1]
 
 
 class LogonSessionizerSketchPlugin(WinEVTXSessionizerSketchPlugin):

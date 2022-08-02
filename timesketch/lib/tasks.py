@@ -191,10 +191,9 @@ def _set_timeline_status(timeline_id, status, error_msg=None):
         timeline.searchindex.set_status(status)
 
     # Update description if there was a failure in ingestion.
-    if error_msg:
-        if timeline.datasources:
-            data_source = timeline.datasources[-1]
-            data_source.error_message = error_msg
+    if error_msg and timeline.datasources:
+        data_source = timeline.datasources[-1]
+        data_source.error_message = error_msg
 
     # Commit changes to database
     db_session.add(timeline)
@@ -246,7 +245,7 @@ def build_index_pipeline(
         Celery chain with indexing task (or single indexing task) and analyzer
         task group.
     """
-    if not (file_path or events):
+    if not file_path and not events:
         raise RuntimeError(
             'Unable to upload data, missing either a file or events.')
     index_task_class = _get_index_task_class(file_extension)
@@ -268,20 +267,11 @@ def build_index_pipeline(
             sketch_id, searchindex.id, user_id=None)
 
     # If there are no analyzers just run the indexer.
-    if not sketch_analyzer_chain:
-        return index_task
-
-    if sketch_analyzer_chain:
-        return chain(
-            index_task, run_sketch_init.s(), sketch_analyzer_chain)
-
-    if current_app.config.get('ENABLE_EMAIL_NOTIFICATIONS'):
-        return chain(
-            index_task,
-            run_email_result_task.s()
-        )
-
-    return chain(index_task)
+    return (
+        chain(index_task, run_sketch_init.s(), sketch_analyzer_chain)
+        if sketch_analyzer_chain
+        else index_task
+    )
 
 
 def build_sketch_analysis_pipeline(
@@ -322,11 +312,7 @@ def build_sketch_analysis_pipeline(
     if not analyzer_kwargs:
         analyzer_kwargs = current_app.config.get('ANALYZERS_DEFAULT_KWARGS', {})
 
-    if user_id:
-        user = User.query.get(user_id)
-    else:
-        user = None
-
+    user = User.query.get(user_id) if user_id else None
     sketch = Sketch.query.get(sketch_id)
     analysis_session = AnalysisSession(user, sketch)
 
@@ -367,10 +353,7 @@ def build_sketch_analysis_pipeline(
     if current_app.config.get('ENABLE_EMAIL_NOTIFICATIONS'):
         tasks.append(run_email_result_task.s(sketch_id))
 
-    if not tasks:
-        return None, None
-
-    return chain(tasks), analysis_session
+    return (chain(tasks), analysis_session) if tasks else (None, None)
 
 
 @celery.task(track_started=True)
@@ -409,17 +392,13 @@ def run_email_result_task(index_name, sketch_id=None):
     # We need to get a fake request context so that url_for() will work.
     with current_app.test_request_context():
         searchindex = SearchIndex.query.filter_by(index_name=index_name).first()
-        sketch = None
-
         try:
             to_username = searchindex.user.username
         except AttributeError:
             logger.warning('No user to send email to.')
             return ''
 
-        if sketch_id:
-            sketch = Sketch.query.get(sketch_id)
-
+        sketch = Sketch.query.get(sketch_id) if sketch_id else None
         subject = 'Timesketch: [{0:s}] is ready'.format(searchindex.name)
 
         # TODO: Use jinja templates.
@@ -428,22 +407,25 @@ def run_email_result_task(index_name, sketch_id=None):
 
         if sketch:
             view_urls = sketch.get_view_urls()
-            view_links = []
-            for view_url, view_name in iter(view_urls.items()):
-                view_links.append('<a href="{0:s}">{1:s}</a>'.format(
-                    view_url,
-                    view_name))
+            view_links = [
+                '<a href="{0:s}">{1:s}</a>'.format(view_url, view_name)
+                for view_url, view_name in iter(view_urls.items())
+            ]
 
-            body = body + '<br><br><b>Sketch</b><br>{0:s}'.format(
-                sketch.external_url)
+            body += '<br><br><b>Sketch</b><br>{0:s}'.format(
+                sketch.external_url
+            )
+
 
             analysis_results = searchindex.description.replace('\n', '<br>')
-            body = body + '<br><br><b>Analysis</b>{0:s}'.format(
-                analysis_results)
+            body += '<br><br><b>Analysis</b>{0:s}'.format(analysis_results)
+
 
             if view_links:
-                body = body + '<br><br><b>Views</b><br>' + '<br>'.join(
-                    view_links)
+                body = f'{body}<br><br><b>Views</b><br>' + '<br>'.join(
+                    view_links
+                )
+
 
         try:
             send_email(subject, body, to_username, use_html=True)
@@ -553,8 +535,7 @@ def run_plaso(
             index_name=index_name, data_store=es, timeline_id=timeline_id)
         raise
 
-    except (RuntimeError, ImportError, NameError, UnboundLocalError,
-            RequestError) as e:
+    except (RuntimeError, ImportError, NameError, RequestError) as e:
         _set_timeline_status(timeline_id, status='fail', error_msg=str(e))
         _close_index(
             index_name=index_name, data_store=es, timeline_id=timeline_id)
@@ -589,21 +570,17 @@ def run_plaso(
     if timeline_id:
         cmd.extend(['--timeline_identifier', str(timeline_id)])
 
-    elastic_username = current_app.config.get('ELASTIC_USER', '')
-    if elastic_username:
+    if elastic_username := current_app.config.get('ELASTIC_USER', ''):
         cmd.extend(['--elastic_user', elastic_username])
 
-    elastic_password = current_app.config.get('ELASTIC_PASSWORD', '')
-    if elastic_password:
+    if elastic_password := current_app.config.get('ELASTIC_PASSWORD', ''):
         cmd.extend(['--elastic_password', elastic_password])
 
-    elastic_ssl = current_app.config.get('ELASTIC_SSL', False)
-    if elastic_ssl:
+    if elastic_ssl := current_app.config.get('ELASTIC_SSL', False):
         cmd.extend(['--use_ssl'])
 
 
-    psort_memory = current_app.config.get('PLASO_UPPER_MEMORY_LIMIT', '')
-    if psort_memory:
+    if psort_memory := current_app.config.get('PLASO_UPPER_MEMORY_LIMIT', ''):
         cmd.extend(['--process_memory_limit', str(psort_memory)])
 
     # Run psort.py
@@ -681,7 +658,6 @@ def run_csv_jsonl(
     # all possible errors and exit the task.
     final_counter = 0
     error_msg = ''
-    error_count = 0
     try:
         es.create_index(
             index_name=index_name, doc_type=event_type, mappings=mappings)
@@ -705,8 +681,7 @@ def run_csv_jsonl(
             index_name=index_name, data_store=es, timeline_id=timeline_id)
         raise
 
-    except (RuntimeError, ImportError, NameError, UnboundLocalError,
-            RequestError) as e:
+    except (RuntimeError, ImportError, NameError, RequestError) as e:
         _set_timeline_status(timeline_id, status='fail', error_msg=str(e))
         _close_index(
             index_name=index_name, data_store=es, timeline_id=timeline_id)
@@ -721,7 +696,7 @@ def run_csv_jsonl(
         logger.error('Error: {0!s}\n{1:s}'.format(e, error_msg))
         return None
 
-    if error_count:
+    if error_count := 0:
         logger.info(
             'Index timeline: [{0:s}] to index [{1:s}] - {2:d} out of {3:d} '
             'events imported (in total {4:d} errors were discovered) '.format(
@@ -798,11 +773,11 @@ def find_data_task(
     data_finder.set_timeline_ids(timeline_ids)
 
     sketch = Sketch.query.get(sketch_id)
-    indices = set()
-    for timeline in sketch.active_timelines:
-        if timeline.id not in timeline_ids:
-            continue
-        indices.add(timeline.searchindex.index_name)
+    indices = {
+        timeline.searchindex.index_name
+        for timeline in sketch.active_timelines
+        if timeline.id in timeline_ids
+    }
 
     data_finder.set_indices(list(indices))
 
@@ -831,8 +806,14 @@ def run_data_finder(
     Returns:
         Celery task object.
     """
-    task_group = group(find_data_task.s(
-        rule_name=x, sketch_id=sketch_id, start_date=start_date,
-        end_date=end_date, timeline_ids=timeline_ids,
-        parameters=parameters) for x in rule_names)
-    return task_group
+    return group(
+        find_data_task.s(
+            rule_name=x,
+            sketch_id=sketch_id,
+            start_date=start_date,
+            end_date=end_date,
+            timeline_ids=timeline_ids,
+            parameters=parameters,
+        )
+        for x in rule_names
+    )

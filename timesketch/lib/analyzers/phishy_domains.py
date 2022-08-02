@@ -136,10 +136,11 @@ class PhishyDomainsSketchPlugin(interface.BaseAnalyzer):
         domain_depth = len(domain_items)
         domain_part = '.'.join(domain_items[:-1])
 
-        minhashes = {}
-        for index in range(0, domain_depth - 1):
-            minhashes[domain_depth - index] = self._get_minhash_from_domain(
-                '.'.join(domain_items[index:]))
+        minhashes = {
+            domain_depth
+            - index: self._get_minhash_from_domain('.'.join(domain_items[index:]))
+            for index in range(domain_depth - 1)
+        }
 
         for watched_domain, watched_item in iter(domain_dict.items()):
             watched_hash = watched_item.get('hash')
@@ -167,8 +168,7 @@ class PhishyDomainsSketchPlugin(interface.BaseAnalyzer):
             # TODO: This can be improved, this is a value and part that
             # needs or can be tweaked. Perhaps move this to a config option
             # that is the min length of strings.
-            match_size = min(
-                int(len(domain_part)/2), int(len(watched_domain_part)/2))
+            match_size = min(len(domain_part) // 2, len(watched_domain_part) // 2)
             if match.size < match_size:
                 continue
             similar.append((watched_domain, score))
@@ -251,13 +251,11 @@ class PhishyDomainsSketchPlugin(interface.BaseAnalyzer):
             tags_to_add = []
             text = None
 
-            similar_domains = self._get_similar_domains(
-                domain, watched_domains)
-
-            if similar_domains:
+            if similar_domains := self._get_similar_domains(
+                domain, watched_domains
+            ):
                 similar_domain_counter += 1
-                emojis_to_add.append(evil_emoji)
-                emojis_to_add.append(phishing_emoji)
+                emojis_to_add.extend((evil_emoji, phishing_emoji))
                 tags_to_add.append('phishy-domain')
                 similar_text_list = ['{0:s} [score: {1:.2f}]'.format(
                     phishy_domain,

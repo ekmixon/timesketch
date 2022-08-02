@@ -56,10 +56,7 @@ def get_emoji(name):
         Unicode string for the emoji if it exists or a blank string otherwise.
     """
     name_upper = name.upper()
-    emoji_object = EMOJI_MAP.get(name_upper)
-    if emoji_object:
-        return emoji_object.code
-    return ''
+    return emoji_object.code if (emoji_object := EMOJI_MAP.get(name_upper)) else ''
 
 
 def get_helper_from_unicode(code):
@@ -72,10 +69,14 @@ def get_helper_from_unicode(code):
         Helper text as a string or an empty string if emoji is not configured.
     """
     code_upper = code.upper()
-    for emoji_object in iter(EMOJI_MAP.values()):
-        if code_upper == emoji_object.code.upper():
-            return emoji_object.help
-    return ''
+    return next(
+        (
+            emoji_object.help
+            for emoji_object in iter(EMOJI_MAP.values())
+            if code_upper == emoji_object.code.upper()
+        ),
+        '',
+    )
 
 
 def get_emojis_as_dict():

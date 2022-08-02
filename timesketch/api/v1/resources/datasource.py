@@ -64,9 +64,7 @@ class DataSourceListResource(resources.ResourceMixin, Resource):
         data_sources = []
         for timeline in sketch.active_timelines:
             number_of_timelines += 1
-            for data_source in timeline.datasources:
-                data_sources.append(data_source)
-
+            data_sources.extend(iter(timeline.datasources))
         schema = {
             'meta': {
                 'number_of_timelines': number_of_timelines,
@@ -212,13 +210,11 @@ class DataSourceResource(resources.ResourceMixin, Resource):
         if not form:
             form = request.data
 
-        provider = form.get('provider')
-        if provider:
+        if provider := form.get('provider'):
             changed = True
             data_source.provider = provider
 
-        context = form.get('context')
-        if context:
+        if context := form.get('context'):
             changed = True
             data_source.context = context
 

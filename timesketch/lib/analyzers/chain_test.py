@@ -39,26 +39,20 @@ class FakeAnalyzer(chain.ChainSketchPlugin):
     def event_stream(self, query_string=None, query_filter=None, query_dsl=None,
                      indices=None, return_fields=None, scroll=True):
         """Yields few test events."""
-        event_one = FakeEvent({
-            'url': 'http://minsida.biz',
-            'stuff': 'foo'})
+        yield FakeEvent({'url': 'http://minsida.biz', 'stuff': 'foo'})
 
-        yield event_one
+        yield FakeEvent(
+            {
+                'url': 'http://onnursida.biz',
+                'stuff': 'bar',
+                'annad': 'lesa_um_mig_herna',
+                'tenging': 'ekki satt',
+            }
+        )
 
-        event_two = FakeEvent({
-            'url': 'http://onnursida.biz',
-            'stuff': 'bar',
-            'annad': 'lesa_um_mig_herna',
-            'tenging': 'ekki satt'})
-
-        yield event_two
-
-        event_three = FakeEvent({
-            'tenging': 'klarlega',
-            'gengur': 'bara svona lala',
-            'url': 'N/A'})
-
-        yield event_three
+        yield FakeEvent(
+            {'tenging': 'klarlega', 'gengur': 'bara svona lala', 'url': 'N/A'}
+        )
 
 
 class FakeChainPlugin(interface.BaseChainPlugin):
@@ -100,8 +94,7 @@ class FakeChainPlugin(interface.BaseChainPlugin):
                 FakeEvent({'e': 't'}),
                 FakeEvent({'f': 'y'})]
             self.ALL_EVENTS.extend(events)
-            for event in events:
-                yield event
+            yield from events
 
 
 class TestChainAnalyzer(testlib.BaseTest):

@@ -42,11 +42,9 @@ def get_sigma_config_file(config_file=None):
             or the Sigma config file is not readabale.
         SigmaConfigParseError: If config file could not be parsed.
     """
-    if config_file:
-        config_file_path = config_file
-    else:
-        config_file_path = current_app.config.get(
-            'SIGMA_CONFIG', './data/sigma_config.yaml')
+    config_file_path = config_file or current_app.config.get(
+        'SIGMA_CONFIG', './data/sigma_config.yaml'
+    )
 
     if not config_file_path:
         raise ValueError('No config_file_path set via param or config file')
@@ -132,8 +130,7 @@ def get_sigma_rules(rule_folder, sigma_config=None):
                     continue
 
                 rule_file_path = os.path.join(dirpath, rule_filename)
-                parsed_rule = get_sigma_rule(rule_file_path, sigma_config)
-                if parsed_rule:
+                if parsed_rule := get_sigma_rule(rule_file_path, sigma_config):
                     return_array.append(parsed_rule)
     return return_array
 
@@ -199,12 +196,12 @@ def get_sigma_rule(filepath, sigma_config=None):
     abs_path = os.path.abspath(filepath)
 
     with codecs.open(
-            abs_path, 'r', encoding='utf-8', errors='replace') as file:
+                abs_path, 'r', encoding='utf-8', errors='replace') as file:
         try:
             rule_return = {}
             rule_yaml_data = yaml.safe_load_all(file.read())
             for doc in rule_yaml_data:
-                rule_return.update(doc)
+                rule_return |= doc
                 parser = sigma_collection.SigmaCollectionParser(
                     yaml.safe_dump(doc), sigma_conf_obj, None)
                 parsed_sigma_rules = parser.generate(sigma_backend)
@@ -236,10 +233,8 @@ def get_sigma_rule(filepath, sigma_config=None):
             sigma_rule = sigma_rule.replace('.keyword:', ':')
             sigma_es_query = sigma_rule
 
-        rule_return.update(
-            {'es_query':sigma_es_query})
-        rule_return.update(
-            {'file_name':os.path.basename(filepath)})
+        rule_return['es_query'] = sigma_es_query
+        rule_return['file_name'] = os.path.basename(filepath)
 
         # in case multiple folders are in the config, need to remove them
         if sigma_rules_paths:
@@ -248,8 +243,7 @@ def get_sigma_rule(filepath, sigma_config=None):
         else:
             file_relpath = 'N/A'
 
-        rule_return.update(
-            {'file_relpath':file_relpath})
+        rule_return['file_relpath'] = file_relpath
 
         return rule_return
 
@@ -293,7 +287,7 @@ def get_sigma_rule_by_text(rule_text, sigma_config=None):
             parser = sigma_collection.SigmaCollectionParser(
                 str(doc), sigma_conf_obj, None)
             parsed_sigma_rules = parser.generate(sigma_backend)
-            rule_return.update(doc)
+            rule_return |= doc
 
     except NotImplementedError as exception:
         logger.error(
@@ -317,11 +311,8 @@ def get_sigma_rule_by_text(rule_text, sigma_config=None):
         sigma_rule = sigma_rule.replace('.keyword:', ':')
         sigma_es_query = sigma_rule
 
-    rule_return.update(
-        {'es_query':sigma_es_query})
-    rule_return.update(
-        {'file_name':'N/A'})
-    rule_return.update(
-        {'file_relpath':'N/A'})
+    rule_return['es_query'] = sigma_es_query
+    rule_return['file_name'] = 'N/A'
+    rule_return['file_relpath'] = 'N/A'
 
     return rule_return

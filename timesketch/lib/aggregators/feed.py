@@ -60,9 +60,7 @@ class ManualFeedAggregation(interface.BaseAggregator):
     @property
     def chart_title(self):
         """Returns a title for the chart."""
-        if self.title:
-            return self.title
-        return 'Results From A Manually Fed Table'
+        return self.title or 'Results From A Manually Fed Table'
 
     # pylint: disable=arguments-differ
     def run(
@@ -96,11 +94,7 @@ class ManualFeedAggregation(interface.BaseAggregator):
                 list(map(keys.add, row.keys()))
             keys.discard('count')
             keys.discard('bucket_name')
-            if keys:
-                field = list(keys)[0]
-            else:
-                field = 'count'
-
+            field = list(keys)[0] if keys else 'count'
         # Encoding information for Vega-Lite.
         encoding = {
             'x': {

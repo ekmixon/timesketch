@@ -213,9 +213,7 @@ def strip_www_from_domain(domain):
     Returns:
         string: Domain without any www, eg: google.com
     """
-    if domain.startswith('www.'):
-        return domain[4:]
-    return domain
+    return domain[4:] if domain.startswith('www.') else domain
 
 
 def get_cdn_provider(domain):

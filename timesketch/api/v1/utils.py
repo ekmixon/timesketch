@@ -218,10 +218,7 @@ def run_aggregator_group(group, sketch_id):
         }
         objects.append(result)
 
-    parameters = {}
-    if group.parameters:
-        parameters = json.loads(group.parameters)
-
+    parameters = json.loads(group.parameters) if group.parameters else {}
     result_chart.title = parameters.get('chart_title', group.name)
     time_after = time.time()
 

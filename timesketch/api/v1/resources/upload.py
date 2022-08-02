@@ -436,8 +436,7 @@ class UploadFileResource(resources.ResourceMixin, Resource):
         utils.update_sketch_last_activity(sketch)
 
         index_name = form.get('index_name', '')
-        file_storage = request.files.get('file')
-        if file_storage:
+        if file_storage := request.files.get('file'):
             chunk_index_name = form.get('chunk_index_name', uuid.uuid4().hex)
             return self._upload_file(
                 file_storage=file_storage, chunk_index_name=chunk_index_name,

@@ -86,7 +86,7 @@ class SketchResource(BaseResource):
         if not resource_objects:
             return default_value
 
-        if not len(resource_objects) == 1:
+        if len(resource_objects) != 1:
             return default_value
 
         first_object = resource_objects[0]
@@ -173,9 +173,7 @@ class SketchResource(BaseResource):
     @property
     def user(self):
         """Property that returns the username of who ran the aggregation."""
-        if not self._username:
-            return 'System'
-        return self._username
+        return self._username or 'System'
 
     def to_dict(self):
         """Returns a dict."""

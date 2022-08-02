@@ -69,7 +69,7 @@ class TestSSHBruteforceSessionizerPlugin(BaseTest):
             2,
             source_attrs={'reporter': 'sshd',
                           'message': '[sshd] [0]: Invalid user ' \
-                          'NoSuchUser from 0.0.0.0 port 0'})
+                              'NoSuchUser from 0.0.0.0 port 0'})
 
         message = analyzer.run()
         self.assertEqual(
@@ -77,7 +77,7 @@ class TestSSHBruteforceSessionizerPlugin(BaseTest):
             'Sessionizing completed, number of session created: 1')
 
         test_message = '[sshd] [0]: Invalid user NoSuchUser from 0.0.0.0 ' \
-            'port 0'
+                'port 0'
         # pylint: disable=unexpected-keyword-arg
         event1 = datastore.event_store['0']
         self.assertEqual(event1['_source']['reporter'], 'sshd')

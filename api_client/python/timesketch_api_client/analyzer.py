@@ -105,12 +105,13 @@ class AnalyzerResult(resource.BaseResource):
     @property
     def log(self):
         """Returns back logs from the analyzer session, if there are any."""
-        return_strings = []
-        for entry in self._get_status_data():
-            return_strings.append(
-                '[{0:s}] = {1:s}'.format(
-                    entry.get('name', 'No Name'),
-                    entry.get('log', 'No recorded logs.')))
+        return_strings = [
+            '[{0:s}] = {1:s}'.format(
+                entry.get('name', 'No Name'), entry.get('log', 'No recorded logs.')
+            )
+            for entry in self._get_status_data()
+        ]
+
         return '\n'.join(return_strings)
 
     @property
@@ -142,12 +143,13 @@ class AnalyzerResult(resource.BaseResource):
     @property
     def status(self):
         """Returns the current status of the analyzer run."""
-        return_strings = []
-        for entry in self._get_status_data():
-            return_strings.append(
-                '[{0:s}] = {1:s}'.format(
-                    entry.get('name', 'No Name'),
-                    entry.get('status', 'Unknown.')))
+        return_strings = [
+            '[{0:s}] = {1:s}'.format(
+                entry.get('name', 'No Name'), entry.get('status', 'Unknown.')
+            )
+            for entry in self._get_status_data()
+        ]
+
         return '\n'.join(return_strings)
 
     @property
@@ -164,12 +166,13 @@ class AnalyzerResult(resource.BaseResource):
     @property
     def status_string(self):
         """Returns a longer version of a status string."""
-        return_strings = []
-        for entry in self._get_status_data():
-            return_strings.append(
-                '{0:s} - {1:s}: {2:s}'.format(
-                    entry.get('name', 'No Name'),
-                    entry.get(
-                        'status_date', datetime.datetime.utcnow().isoformat()),
-                    entry.get('status', 'Unknown.')))
+        return_strings = [
+            '{0:s} - {1:s}: {2:s}'.format(
+                entry.get('name', 'No Name'),
+                entry.get('status_date', datetime.datetime.utcnow().isoformat()),
+                entry.get('status', 'Unknown.'),
+            )
+            for entry in self._get_status_data()
+        ]
+
         return '\n'.join(return_strings)

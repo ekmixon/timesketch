@@ -75,9 +75,7 @@ class Sketch(resource.BaseResource):
             return {}
         data_object = objects[0]
         permission_string = data_object.get('all_permissions')
-        if not permission_string:
-            return {}
-        return json.loads(permission_string)
+        return json.loads(permission_string) if permission_string else {}
 
     @property
     def attributes(self):
@@ -136,8 +134,7 @@ class Sketch(resource.BaseResource):
             return []
 
         sketch_data = objects[0]
-        label_string = sketch_data.get('label_string', '')
-        if label_string:
+        if label_string := sketch_data.get('label_string', ''):
             return json.loads(label_string)
 
         return []
@@ -162,9 +159,7 @@ class Sketch(resource.BaseResource):
             return []
         data_object = objects[0]
         permission_string = data_object.get('my_permissions')
-        if not permission_string:
-            return []
-        return json.loads(permission_string)
+        return json.loads(permission_string) if permission_string else []
 
     @property
     def name(self):
@@ -214,15 +209,15 @@ class Sketch(resource.BaseResource):
             return 'Unknown'
 
         first_object = objects[0]
-        status_list = first_object.get('status')
+        if status_list := first_object.get('status'):
+            return (
+                'Unknown'
+                if len(status_list) < 1
+                else status_list[0].get('status', 'Unknown')
+            )
 
-        if not status_list:
+        else:
             return 'Unknown'
-
-        if len(status_list) < 1:
-            return 'Unknown'
-
-        return status_list[0].get('status', 'Unknown')
 
     def add_attribute_list(self, name, values, ontology='text'):
         """Adds or modifies attributes to the sketch.
@@ -508,7 +503,7 @@ class Sketch(resource.BaseResource):
             data['public'] = 'true'
 
         if permissions:
-            allowed_permissions = set(['read', 'write', 'delete'])
+            allowed_permissions = {'read', 'write', 'delete'}
             use_permissions = list(
                 allowed_permissions.intersection(set(permissions)))
             if set(use_permissions) != set(permissions):
@@ -587,19 +582,16 @@ class Sketch(resource.BaseResource):
             group_id = aggregation_dict.get('aggregationgroup_id')
             if group_id:
                 continue
-            label_string = aggregation_dict.get('label_string', '')
-            if label_string:
+            if label_string := aggregation_dict.get('label_string', ''):
                 labels = json.loads(label_string)
             else:
                 labels = []
 
-            if include_labels:
-                if not any(x in include_labels for x in labels):
-                    continue
+            if include_labels and all(x not in include_labels for x in labels):
+                continue
 
-            if exclude_labels:
-                if any(x in exclude_labels for x in labels):
-                    continue
+            if exclude_labels and any(x in exclude_labels for x in labels):
+                continue
 
             aggregation_obj = aggregation.Aggregation(sketch=self)
             aggregation_obj.from_saved(aggregation_id=agg_id)
@@ -677,10 +669,7 @@ class Sketch(resource.BaseResource):
                     stat['status'] = status[0].get('status', 'N/A')
                 stats_list.append(stat)
 
-        if as_sessions:
-            return sessions
-
-        return stats_list
+        return sessions if as_sessions else stats_list
 
     def get_aggregation(self, aggregation_id):
         """Return a stored aggregation.
@@ -695,10 +684,14 @@ class Sketch(resource.BaseResource):
         if self.is_archived():
             raise RuntimeError(
                 'Unable to get aggregations on an archived sketch.')
-        for aggregation_obj in self.list_aggregations():
-            if aggregation_obj.id == aggregation_id:
-                return aggregation_obj
-        return None
+        return next(
+            (
+                aggregation_obj
+                for aggregation_obj in self.list_aggregations()
+                if aggregation_obj.id == aggregation_id
+            ),
+            None,
+        )
 
     def get_aggregation_group(self, group_id):
         """Return a stored aggregation group.
@@ -714,10 +707,14 @@ class Sketch(resource.BaseResource):
             raise RuntimeError(
                 'Unable to get aggregation groups on an archived sketch.')
 
-        for group_obj in self.list_aggregation_groups():
-            if group_obj.id == group_id:
-                return group_obj
-        return None
+        return next(
+            (
+                group_obj
+                for group_obj in self.list_aggregation_groups()
+                if group_obj.id == group_id
+            ),
+            None,
+        )
 
     def get_story(self, story_id=None, story_title=None):
         """Returns a story object that is stored in the sketch.
@@ -821,9 +818,8 @@ class Sketch(resource.BaseResource):
         for timeline_ in self.list_timelines():
             if timeline_id and timeline_id == timeline_.id:
                 return timeline_
-            if timeline_name:
-                if timeline_name.lower() == timeline_.name.lower():
-                    return timeline_
+            if timeline_name and timeline_name.lower() == timeline_.name.lower():
+                return timeline_
         return None
 
     def list_stories(self):
@@ -845,14 +841,16 @@ class Sketch(resource.BaseResource):
         if not story_objects:
             return story_list
 
-        if not len(story_objects) == 1:
+        if len(story_objects) != 1:
             return story_list
         stories = story_objects[0]
-        for story_dict in stories:
-            story_list.append(story.Story(
-                story_id=story_dict.get('id', -1),
-                sketch=self,
-                api=self.api))
+        story_list.extend(
+            story.Story(
+                story_id=story_dict.get('id', -1), sketch=self, api=self.api
+            )
+            for story_dict in stories
+        )
+
         return story_list
 
     def list_views(self):
@@ -1029,7 +1027,7 @@ class Sketch(resource.BaseResource):
             'Using this function is discouraged, please consider using '
             'the search.Search object instead, which is more flexible.')
 
-        if not (query_string or query_filter or query_dsl or view):
+        if not query_string and not query_filter and not query_dsl and not view:
             raise RuntimeError('You need to supply a query or view')
 
         if self.is_archived():
@@ -1057,10 +1055,7 @@ class Sketch(resource.BaseResource):
         if file_name:
             return search_obj.to_file(file_name)
 
-        if as_pandas:
-            return search_obj.to_pandas()
-
-        return search_obj.to_dict()
+        return search_obj.to_pandas() if as_pandas else search_obj.to_dict()
 
     def list_available_analyzers(self):
         """Returns a list of available analyzers."""
@@ -1182,7 +1177,7 @@ class Sketch(resource.BaseResource):
             data['public'] = 'false'
 
         if permissions:
-            allowed_permissions = set(['read', 'write', 'delete'])
+            allowed_permissions = {'read', 'write', 'delete'}
             permissions = list(
                 allowed_permissions.intersection(set(permissions)))
             data['permissions'] = json.dumps(permissions)
@@ -1514,9 +1509,7 @@ class Sketch(resource.BaseResource):
             'tag': tags
         }
 
-        duplicate_attributes = [key for key in attributes if key in form_data]
-
-        if duplicate_attributes:
+        if duplicate_attributes := [key for key in attributes if key in form_data]:
             duplicates = ', '.join(duplicate_attributes)
             raise ValueError(
                 f'Following attributes cannot overwrite values '

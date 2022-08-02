@@ -85,9 +85,8 @@ class SigmaResource(resources.ResourceMixin, Resource):
                 HTTP_STATUS_CODE_NOT_FOUND,
                 'OS Error, unable to get the path to the Sigma rules')
         for rule in sigma_rules:
-            if rule is not None:
-                if rule_uuid == rule.get('id'):
-                    return_rule = rule
+            if rule is not None and rule_uuid == rule.get('id'):
+                return_rule = rule
 
         if return_rule is None:
             abort(

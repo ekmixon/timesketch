@@ -63,8 +63,7 @@ class Timeline(resource.BaseResource):
             return []
 
         timeline_data = objects[0]
-        label_string = timeline_data.get('label_string', '')
-        if label_string:
+        if label_string := timeline_data.get('label_string', ''):
             return json.loads(label_string)
 
         return []
@@ -170,9 +169,11 @@ class Timeline(resource.BaseResource):
         sketch_is_archived = meta.get('is_archived', False)
 
         timeline_dict = meta.get('timelines')
-        if not timeline_dict:
-            return sketch_is_archived
-        return timeline_dict.get(self.index_name)
+        return (
+            timeline_dict.get(self.index_name)
+            if timeline_dict
+            else sketch_is_archived
+        )
 
     def run_analyzer(
             self, analyzer_name, analyzer_kwargs=None, ignore_previous=False):
@@ -251,9 +252,7 @@ class Timeline(resource.BaseResource):
 
             response = self.api.fetch_resource_data(
                 f'sketches/{self._sketch_id}/timelines/{self.id}/analysis/')
-            analyzer_data = response.get('objects', [[]])
-
-            if analyzer_data:
+            if analyzer_data := response.get('objects', [[]]):
                 for result in analyzer_data[0]:
                     result_analyzer = result.get('analyzer_name', 'N/A')
                     done_names.add(result_analyzer.lower())

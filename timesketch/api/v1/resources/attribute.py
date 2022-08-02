@@ -53,16 +53,18 @@ class AttributeResource(resources.ResourceMixin, Resource):
             An empty string if there are no issues, otherwise an
             error string to use to abort.
         """
-        value = form.get(key_to_check)
-        if not value:
+        if value := form.get(key_to_check):
+            return (
+                ''
+                if isinstance(value, str)
+                else 'Unable to save an attribute without a {0:s}.'.format(
+                    key_to_check
+                )
+            )
+
+        else:
             return 'Unable to save an attribute without a {0:s}.'.format(
                 key_to_check)
-
-        if not isinstance(value, str):
-            return 'Unable to save an attribute without a {0:s}.'.format(
-                key_to_check)
-
-        return ''
 
     @login_required
     def get(self, sketch_id):
@@ -111,8 +113,7 @@ class AttributeResource(resources.ResourceMixin, Resource):
                 'sketch without any data submitted.')
 
         for check in ['name', 'ontology']:
-            error_message = self._validate_form_entry(form, check)
-            if error_message:
+            if error_message := self._validate_form_entry(form, check):
                 return abort(
                     HTTP_STATUS_CODE_BAD_REQUEST, error_message)
 
@@ -136,7 +137,7 @@ class AttributeResource(resources.ResourceMixin, Resource):
         value_strings = [ontology_lib.OntologyManager.encode_value(
             x, cast_as_string) for x in values]
 
-        if any([not isinstance(x, str) for x in value_strings]):
+        if any(not isinstance(x, str) for x in value_strings):
             return abort(
                 HTTP_STATUS_CODE_BAD_REQUEST,
                 'All values needs to be stored as strings.')
@@ -218,8 +219,7 @@ class AttributeResource(resources.ResourceMixin, Resource):
                 'sketch without any data submitted.')
 
         for check in ['name', 'ontology']:
-            error_message = self._validate_form_entry(form, check)
-            if error_message:
+            if error_message := self._validate_form_entry(form, check):
                 return abort(
                     HTTP_STATUS_CODE_BAD_REQUEST, error_message)
 
